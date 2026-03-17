@@ -1,311 +1,230 @@
-import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+import {
+  Text,
+  StyleSheet,
+  View,
+  TextInput,
+  FlatList,
+  ScrollView,
+  Image
+} from "react-native";
+import React from "react";
 
-export default function Dashboard() {
+export default function dashboard() {
+  const actividadReciente = [
+    {
+      id: "1",
+      nombre: "Cervantes Santana Cristobal Eduardo",
+      hora: "2:10 PM - Entrada",
+      status: "green",
+    },
+    {
+      id: "2",
+      nombre: "Isaac Lopez Madrigal",
+      hora: "2:00 PM - Entrada",
+      status: "green",
+    },
+    {
+      id: "3",
+      nombre: "Hernandez Maldonado Aldo Uriel",
+      hora: "1:50 PM - Entrada",
+      status: "red",
+    },
+    {
+      id: "4",
+      nombre: "Jimenez Perez Valentina",
+      hora: "1:40 PM - Entrada",
+      status: "orange",
+    },
+    {
+      id: "5",
+      nombre: "Zavala Trejo Marcol",
+      hora: "1:30 PM - Entrada",
+      status: "green",
+    },
+  ];
+
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" />
-      
-      {/* Header */}
+    <View style={styles.mainContainer}>
+      {/* Header Oscuro */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>AXISMX</Text>
+        <View>
+          <Text style={styles.headerTitle}>AxisMx</Text>
+          <Text style={styles.headerSubtitle}>Bienvenido: Cristobal</Text>
+        </View>
+        <View style={styles.logoContainer}>
+          <Image
+            source={require("../assets/logo2.png")}
+            style={styles.logo}
+          />
+        </View>
       </View>
 
-      {/* Stats Cards */}
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.statsContainer}>
-          <View style={[styles.statCard, styles.statCardBlue]}>
-            <Text style={styles.statNumber}>156</Text>
-            <Text style={styles.statLabel}>Ingresos Hoy</Text>
+      <View style={styles.content}>
+        {/* Buscador */}
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar usuario reciente por nombre"
+            placeholderTextColor="#666"
+          />
+        </View>
+
+        {/* Cuadros de Estadísticas */}
+        <View style={styles.statsGrid}>
+          <View style={[styles.statCard, { backgroundColor: "#3498db" }]}>
+            <Text style={styles.statNumber}>1040</Text>
+            <Text style={styles.statLabel}>Registros totales hoy</Text>
           </View>
-          <View style={[styles.statCard, styles.statCardGreen]}>
-            <Text style={styles.statNumber}>42</Text>
+          <View style={[styles.statCard, { backgroundColor: "#8ec444" }]}>
+            <Text style={styles.statNumber}>1000</Text>
             <Text style={styles.statLabel}>Dentro</Text>
           </View>
-          <View style={[styles.statCard, styles.statCardOrange]}>
-            <Text style={styles.statNumber}>8</Text>
+          <View style={[styles.statCard, { backgroundColor: "#e74c3c" }]}>
+            <Text style={styles.statNumber}>30</Text>
+            <Text style={styles.statLabel}>Salidas</Text>
+          </View>
+          <View style={[styles.statCard, { backgroundColor: "#e67e22" }]}>
+            <Text style={styles.statNumber}>10</Text>
             <Text style={styles.statLabel}>Visitantes</Text>
           </View>
         </View>
 
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Buscar por nombre o ID..."
-            placeholderTextColor="#999"
-          />
-          <TouchableOpacity style={styles.searchButton}>
-            <Text style={styles.searchButtonText}>Buscar</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Quick Actions */}
-        <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
-        <View style={styles.actionsContainer}>
-          <TouchableOpacity style={styles.actionButton}>
-            <Text style={styles.actionIcon}>➕</Text>
-            <Text style={styles.actionText}>Registrar Entrada</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.actionButton}>
-            <Text style={styles.actionIcon}>🚪</Text>
-            <Text style={styles.actionText}>Registrar Salida</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.actionButton}>
-            <Text style={styles.actionIcon}>👤</Text>
-            <Text style={styles.actionText}>Nuevo Usuario</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Recent Activity */}
         <Text style={styles.sectionTitle}>Actividad Reciente</Text>
-        
-        <View style={styles.activityItem}>
-          <View style={[styles.activityIndicator, styles.entryIndicator]} />
-          <View style={styles.activityInfo}>
-            <Text style={styles.activityName}>Cristobal Eduardo Cervantes Santana</Text>
-            <Text style={styles.activityTime}>08:45 AM - Entrada</Text>
-          </View>
-          <Text style={styles.activityID}>ID: 1234</Text>
-        </View>
 
-
-        <View style={styles.activityItem}>
-          <View style={[styles.activityIndicator, styles.visitorIndicator]} />
-          <View style={styles.activityInfo}>
-            <Text style={styles.activityName}>Isaac Lopez Madrigal</Text>
-            <Text style={styles.activityTime}>02:15 PM - Visitante</Text>
-          </View>
-          <Text style={styles.activityID}>ID: 9012</Text>
-        </View>
-
-        <View style={styles.activityItem}>
-          <View style={[styles.activityIndicator, styles.entryIndicator]} />
-          <View style={styles.activityInfo}>
-            <Text style={styles.activityName}>Valentina Jimenez Perez</Text>
-            <Text style={styles.activityTime}>09:20 AM - Entrada</Text>
-          </View>
-          <Text style={styles.activityID}>ID: 3456</Text>
-        </View>
-      </ScrollView>
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIcon}>🏠</Text>
-          <Text style={styles.navText}>Inicio</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIcon}>📋</Text>
-          <Text style={styles.navText}>Registros</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={[styles.navItem, styles.navCenter]}>
-          <Text style={styles.navCenterIcon}>📷</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIcon}>👥</Text>
-          <Text style={styles.navText}>Usuarios</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIcon}>⚙️</Text>
-          <Text style={styles.navText}>Ajustes</Text>
-        </TouchableOpacity>
+        {/* Lista de Actividad */}
+        <FlatList
+          data={actividadReciente}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.activityCard}>
+              <View
+                style={[
+                  styles.statusIndicator,
+                  { backgroundColor: item.status },
+                ]}
+              />
+              <View>
+                <Text style={styles.personName}>{item.nombre}</Text>
+                <Text style={styles.activityTime}>{item.hora}</Text>
+              </View>
+            </View>
+          )}
+        />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#CFE2EB', // Color azul clarito del fondo
   },
   header: {
-    backgroundColor: '#0477BF',
-    padding: 20,
-    paddingTop: 40,
+    backgroundColor: '#34495e',
+    paddingTop: 10,
+    paddingHorizontal: 20,
+    paddingBottom: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
     color: 'white',
+    fontSize: 17,
+    fontWeight: 'bold',
+  },
+  headerSubtitle: {
+    color: '#bdc3c7',
+    fontSize: 13,
+  },
+  logoPlaceholder: {
+    width: 40,
+    height: 40,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    opacity: 0.8,
   },
   content: {
     flex: 1,
     padding: 15,
   },
-  statsContainer: {
+  searchContainer: {
+    backgroundColor: 'white',
+    borderRadius: 25,
+    paddingHorizontal: 15,
+    marginBottom: 20,
+    height: 45,
+    justifyContent: 'center',
+    elevation: 2,
+  },
+  searchInput: {
+    fontSize: 14,
+  },
+  statsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginBottom: 20,
   },
   statCard: {
-    flex: 1,
-    padding: 15,
-    borderRadius: 10,
-    marginHorizontal: 5,
-    alignItems: 'center',
-  },
-  statCardBlue: {
-    backgroundColor: '#3498db',
-  },
-  statCardGreen: {
-    backgroundColor: '#0be164',
-  },
-  statCardOrange: {
-    backgroundColor: '#e67e22',
-  },
-  statNumber: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: 'white',
-    marginTop: 5,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    marginBottom: 20,
-  },
-  searchInput: {
-    flex: 1,
-    backgroundColor: 'white',
-    padding: 15,
-    borderRadius: 10,
-    fontSize: 16,
-    marginRight: 10,
-    shadowColor: '#0477AF',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  searchButton: {
-    backgroundColor: '#0477AF',
-    padding: 15,
+    width: '48%',
+    height: 80,
     borderRadius: 10,
     justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+    padding: 5,
   },
-  searchButtonText: {
+  statNumber: {
     color: 'white',
+    fontSize: 20,
     fontWeight: 'bold',
   },
+  statLabel: {
+    color: 'white',
+    fontSize: 11,
+    textAlign: 'center',
+  },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#2c3e50',
     marginBottom: 15,
   },
-  actionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 25,
-  },
-  actionButton: {
-    flex: 1,
-    backgroundColor: 'white',
+  activityCard: {
+    backgroundColor: '#3c5a6b', // Color grisáceo azulado de las filas
+    borderRadius: 30,
     padding: 15,
-    borderRadius: 10,
-    marginHorizontal: 5,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  actionIcon: {
-    fontSize: 24,
-    marginBottom: 5,
-  },
-  actionText: {
-    fontSize: 12,
-    color: '#2c3e50',
-    textAlign: 'center',
-  },
-  activityItem: {
-    backgroundColor: 'white',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    marginBottom: 12,
   },
-  activityIndicator: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 10,
+  statusIndicator: {
+    width: 15,
+    height: 15,
+    borderRadius: 7.5,
+    marginRight: 15,
   },
-  entryIndicator: {
-    backgroundColor: '#2ecc71',
-  },
-  exitIndicator: {
-    backgroundColor: '#e74c3c',
-  },
-  visitorIndicator: {
-    backgroundColor: '#f39c12',
-  },
-  activityInfo: {
-    flex: 1,
-  },
-  activityName: {
-    fontSize: 16,
+  personName: {
+    color: 'white',
+    fontSize: 13,
     fontWeight: '500',
-    color: '#2c3e50',
   },
   activityTime: {
-    fontSize: 12,
-    color: '#7f8c8d',
-    marginTop: 2,
-  },
-  activityID: {
-    fontSize: 12,
-    color: '#95a5a6',
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#ecf0f1',
-  },
-  navItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  navCenter: {
-    marginTop: -20,
-  },
-  navIcon: {
-    fontSize: 20,
-  },
-  navCenterIcon: {
-    fontSize: 30,
-    backgroundColor: '#2c3e50',
-    color: 'white',
-    padding: 10,
-    borderRadius: 30,
-    overflow: 'hidden',
-  },
-  navText: {
+    color: '#bdc3c7',
     fontSize: 11,
-    color: '#7f8c8d',
     marginTop: 2,
   },
-});
+  logoContainer: {
+    alignItems: "center",
+    marginTop: 0,
+    zIndex: 10,
+  },
+  logo: {
+    width: 50,
+    height: 50,
+    marginBottom: 0,
+    resizeMode: "contain",
+  },
+})

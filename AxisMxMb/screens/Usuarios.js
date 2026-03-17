@@ -1,268 +1,271 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import {
+  Text,
+  StyleSheet,
+  View,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+  Image
+} from "react-native";
+import React from "react";
+import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 
 export default function Usuarios() {
-  const [selectedFilter, setSelectedFilter] = useState('todos');
-  
-  const users = [
-    { id: '1234', name: 'Juan Pérez', type: 'Empleado', department: 'Ventas', status: 'Dentro', image: '👨' },
-    { id: '5678', name: 'María García', type: 'Empleado', department: 'RRHH', status: 'Fuera', image: '👩' },
-    { id: '9012', name: 'Carlos López', type: 'Visitante', department: 'Proveedor', status: 'Dentro', image: '👨' },
-    { id: '3456', name: 'Ana Martínez', type: 'Empleado', department: 'IT', status: 'Dentro', image: '👩' },
-    { id: '7890', name: 'Roberto Sánchez', type: 'Empleado', department: 'Operaciones', status: 'Fuera', image: '👨' },
-    { id: '2345', name: 'Laura Torres', type: 'Visitante', department: 'Cliente', status: 'Fuera', image: '👩' },
-    { id: '6789', name: 'Miguel Ángel', type: 'Empleado', department: 'Mantenimiento', status: 'Dentro', image: '👨' },
+  // Datos de ejemplo para la lista
+  const usuarios = [
+    {
+      id: "1",
+      nombre: "Cervantes Santana Cristobal Eduardo",
+      status: "#8ec444",
+    },
+    {
+      id: "2",
+      nombre: "Cervantes Santana Cristobal Eduardo",
+      status: "#8ec444",
+    },
+    {
+      id: "3",
+      nombre: "Cervantes Santana Cristobal Eduardo",
+      status: "#8ec444",
+    },
+    {
+      id: "4",
+      nombre: "Cervantes Santana Cristobal Eduardo",
+      status: "#8ec444",
+    },
+    {
+      id: "5",
+      nombre: "Cervantes Santana Cristobal Eduardo",
+      status: "#8ec444",
+    },
   ];
 
-  const filters = ['todos', 'empleados', 'visitantes', 'dentro', 'fuera'];
-
-  const getStatusColor = (status) => {
-    return status === 'Dentro' ? '#2ecc71' : '#e74c3c';
-  };
-
   return (
-    <View style={styles.container}>
+    <View style={styles.mainContainer}>
+      {/* Header Oscuro */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Usuarios</Text>
-        <TouchableOpacity style={styles.addButton}>
-          <Text style={styles.addButtonText}>+ Nuevo</Text>
-        </TouchableOpacity>
+        <View>
+          <Text style={styles.headerTitle}>AxisMx</Text>
+          <Text style={styles.headerSubtitle}>Bienvenido: Cristobal</Text>
+        </View>
+
+        <View style={styles.logoContainer}>
+          <Image source={require("../assets/logo2.png")} style={styles.logo} />
+        </View>
       </View>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Buscar usuarios..."
-          placeholderTextColor="#999"
+      {/* Buscador */}
+      <View style={styles.searchSection}>
+        <View style={styles.searchContainer}>
+          <Ionicons
+            name="search"
+            size={20}
+            color="#666"
+            style={{ marginRight: 10 }}
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar usuario por nombre"
+            placeholderTextColor="#666"
+          />
+        </View>
+      </View>
+
+      {/* Filtros de Categoría */}
+      <View style={styles.filterBar}>
+        <View style={styles.filterItem}>
+          <View style={[styles.filterBox, { backgroundColor: "#3498db" }]} />
+          <Text style={styles.filterLabel}>Todos</Text>
+        </View>
+        <View style={styles.filterItem}>
+          <View style={[styles.filterBox, { backgroundColor: "#8ec444" }]} />
+          <Text style={styles.filterLabel}>Dentro</Text>
+        </View>
+        <View style={styles.filterItem}>
+          <View style={[styles.filterBox, { backgroundColor: "#e74c3c" }]} />
+          <Text style={styles.filterLabel}>Fuera</Text>
+        </View>
+        <View style={styles.filterItem}>
+          <View style={[styles.filterBox, { backgroundColor: "#e67e22" }]} />
+          <Text style={styles.filterLabel}>Visitas</Text>
+        </View>
+      </View>
+
+      {/* Lista de Usuarios */}
+      <View style={styles.content}>
+        <Text style={styles.listTitle}>Lista de Usuarios (1000)</Text>
+
+        <FlatList
+          data={usuarios}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.userCard}>
+              <View style={styles.cardHeader}>
+                <View
+                  style={[
+                    styles.statusCircle,
+                    { backgroundColor: item.status },
+                  ]}
+                />
+                <Text style={styles.userName} numberOfLines={1}>
+                  {item.nombre}
+                </Text>
+              </View>
+
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity style={[styles.actionButton, styles.editBtn]}>
+                  <Text style={styles.editBtnText}>Editar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.deleteBtn]}
+                >
+                  <Text style={styles.actionButtonText}>Eliminar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.actionButton, styles.viewBtn]}>
+                  <Text style={styles.actionButtonText}>Ver</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
         />
-        <TouchableOpacity style={styles.filterButton}>
-          <Text style={styles.filterButtonText}>🔍</Text>
-        </TouchableOpacity>
       </View>
-
-      {/* Filters */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersContainer}>
-        {filters.map((filter) => (
-          <TouchableOpacity
-            key={filter}
-            style={[
-              styles.filterChip,
-              selectedFilter === filter && styles.filterChipActive
-            ]}
-            onPress={() => setSelectedFilter(filter)}
-          >
-            <Text style={[
-              styles.filterChipText,
-              selectedFilter === filter && styles.filterChipTextActive
-            ]}>
-              {filter.charAt(0).toUpperCase() + filter.slice(1)}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      {/* Users List */}
-      <ScrollView style={styles.content}>
-        <Text style={styles.listTitle}>Lista de Usuarios ({users.length})</Text>
-        
-        {users.map((user, index) => (
-          <TouchableOpacity key={index} style={styles.userCard}>
-            <View style={styles.userImage}>
-              <Text style={styles.userImageText}>{user.image}</Text>
-            </View>
-            
-            <View style={styles.userInfo}>
-              <View style={styles.userHeader}>
-                <Text style={styles.userName}>{user.name}</Text>
-                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(user.status) + '20' }]}>
-                  <View style={[styles.statusDot, { backgroundColor: getStatusColor(user.status) }]} />
-                  <Text style={[styles.statusText, { color: getStatusColor(user.status) }]}>{user.status}</Text>
-                </View>
-              </View>
-              
-              <View style={styles.userDetails}>
-                <Text style={styles.userType}>{user.type}</Text>
-                <Text style={styles.userDepartment}>{user.department}</Text>
-              </View>
-              
-              <Text style={styles.userId}>ID: {user.id}</Text>
-            </View>
-            
-            <TouchableOpacity style={styles.moreButton}>
-              <Text style={styles.moreButtonText}>⋯</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#CFE2EB", // Color azul clarito del fondo
   },
   header: {
-    backgroundColor: '#2c3e50',
-    padding: 20,
-    paddingTop: 40,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    backgroundColor: "#34495e",
+    paddingTop: 10,
+    paddingHorizontal: 20,
+    paddingBottom: 0,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
+    color: "white",
+    fontSize: 17,
+    fontWeight: "bold",
   },
-  addButton: {
-    backgroundColor: '#34495e',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 5,
+  headerSubtitle: {
+    color: "#bdc3c7",
+    fontSize: 13,
   },
-  addButtonText: {
-    color: 'white',
-    fontWeight: '500',
+  logoContainer: {
+    alignItems: "center",
+    marginTop: 0,
+    zIndex: 10,
+  },
+  logo: {
+    width: 50,
+    height: 50,
+    marginBottom: 0,
+    resizeMode: "contain",
+  },
+  searchSection: {
+    backgroundColor: "#CFE2EB",
+    padding: 15,
   },
   searchContainer: {
-    flexDirection: 'row',
-    padding: 15,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ecf0f1',
+    backgroundColor: "white",
+    borderRadius: 25,
+    paddingHorizontal: 15,
+    height: 45,
+    flexDirection: "row",
+    alignItems: "center",
+    elevation: 3,
   },
   searchInput: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
-    padding: 12,
-    borderRadius: 10,
-    fontSize: 16,
-    marginRight: 10,
-  },
-  filterButton: {
-    backgroundColor: '#0477bf',
-    padding: 12,
-    borderRadius: 10,
-    justifyContent: 'center',
-  },
-  filterButtonText: {
-    fontSize: 20,
-  },
-  filtersContainer: {
-    backgroundColor: 'white',
-    paddingVertical: 15,
-    paddingHorizontal: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ecf0f1',
-  },
-  filterChip: {
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-    marginHorizontal: 5,
-  },
-  filterChipActive: {
-    backgroundColor: '#0477bf',
-  },
-  filterChipText: {
-    color: '#7f8c8d',
     fontSize: 14,
   },
-  filterChipTextActive: {
-    color: 'white',
+  filterBar: {
+    backgroundColor: "#3c5a6b",
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingVertical: 15,
+  },
+  filterItem: {
+    alignItems: "center",
+  },
+  filterBox: {
+    width: 45,
+    height: 45,
+    borderRadius: 8,
+    marginBottom: 5,
+  },
+  filterLabel: {
+    color: "white",
+    fontSize: 12,
   },
   content: {
     flex: 1,
     padding: 15,
   },
   listTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2c3e50',
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#2c3e50",
     marginBottom: 15,
   },
   userCard: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 15,
+    backgroundColor: "#3c5a6b",
+    borderRadius: 20,
+    padding: 12,
+    marginBottom: 15,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    paddingHorizontal: 5,
   },
-  userImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#ecf0f1',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
-  },
-  userImageText: {
-    fontSize: 24,
-  },
-  userInfo: {
-    flex: 1,
-  },
-  userHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 5,
-  },
-  userName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2c3e50',
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 4,
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  userDetails: {
-    flexDirection: 'row',
-    marginBottom: 5,
-  },
-  userType: {
-    fontSize: 13,
-    color: '#7f8c8d',
+  statusCircle: {
+    width: 15,
+    height: 15,
+    borderRadius: 7.5,
     marginRight: 10,
   },
-  userDepartment: {
+  userName: {
+    color: "white",
     fontSize: 13,
-    color: '#7f8c8d',
+    fontWeight: "500",
+    flex: 1,
   },
-  userId: {
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  actionButton: {
+    flex: 1,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 4,
+  },
+  editBtn: {
+    backgroundColor: "white",
+  },
+  deleteBtn: {
+    backgroundColor: "#e74c3c",
+  },
+  viewBtn: {
+    backgroundColor: "#1a59bf",
+  },
+  editBtnText: {
+    color: "#3c5a6b",
     fontSize: 12,
-    color: '#95a5a6',
+    fontWeight: "bold",
   },
-  moreButton: {
-    padding: 10,
-  },
-  moreButtonText: {
-    fontSize: 20,
-    color: '#7f8c8d',
+  actionButtonText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "bold",
   },
 });
