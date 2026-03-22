@@ -1,230 +1,137 @@
-import {
-  Text,
-  StyleSheet,
-  View,
-  TextInput,
-  FlatList,
-  ScrollView,
-  Image
-} from "react-native";
-import React from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
+import React from 'react'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { useFonts } from 'expo-font';
 
-export default function dashboard() {
-  const actividadReciente = [
-    {
-      id: "1",
-      nombre: "Cervantes Santana Cristobal Eduardo",
-      hora: "2:10 PM - Entrada",
-      status: "green",
-    },
-    {
-      id: "2",
-      nombre: "Isaac Lopez Madrigal",
-      hora: "2:00 PM - Entrada",
-      status: "green",
-    },
-    {
-      id: "3",
-      nombre: "Hernandez Maldonado Aldo Uriel",
-      hora: "1:50 PM - Entrada",
-      status: "red",
-    },
-    {
-      id: "4",
-      nombre: "Jimenez Perez Valentina",
-      hora: "1:40 PM - Entrada",
-      status: "orange",
-    },
-    {
-      id: "5",
-      nombre: "Zavala Trejo Marcol",
-      hora: "1:30 PM - Entrada",
-      status: "green",
-    },
-  ];
+export default function Dashboard() {
+  const [fontsLoaded] = useFonts({
+    Ultra: require("../assets/fonts/DelaGothicOne-Regular.ttf"),
+  });
+
+  if (!fontsLoaded) return null;
 
   return (
-    <View style={styles.mainContainer}>
-      {/* Header Oscuro */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>AxisMx</Text>
-          <Text style={styles.headerSubtitle}>Bienvenido: Cristobal</Text>
+    <SafeAreaView style={styles.contenedor}>
+      <ScrollView contentContainerStyle={styles.areaScroll} showsVerticalScrollIndicator={false}>
+        
+        {/* 1. Encabezado con Recuadro Blanco */}
+        <View style={styles.encabezadoBlanco}>
+          <Text style={styles.textoTitulo}>Dashboard</Text>
+          <TouchableOpacity style={styles.badgePerfil}>
+             <View style={styles.iconoPerfil} />
+             <Text style={styles.nombrePerfil}>Cristobal</Text>
+          </TouchableOpacity>
         </View>
-        <View style={styles.logoContainer}>
-          <Image
-            source={require("../assets/logo2.png")}
-            style={styles.logo}
+
+        {/* 2. Cuadrícula de Estadísticas */}
+        <View style={styles.cuadricula}>
+          <View style={styles.cajaStat}>
+            <Text style={styles.etiquetaStat}>Accesos vehiculares esta semana</Text>
+            <Text style={styles.valorStat}>8</Text>
+          </View>
+          <View style={styles.cajaStat}>
+            <Text style={styles.etiquetaStat}>Accesos peatonales esta semana</Text>
+            <Text style={styles.valorStat}>14</Text>
+          </View>
+          <View style={styles.cajaStat}>
+            <Text style={styles.etiquetaStat}>Total esta semana</Text>
+            <Text style={styles.valorStat}>14</Text>
+          </View>
+          <View style={styles.cajaStat}>
+            <Text style={styles.etiquetaStat}>Zona mas Trafico</Text>
+            <Text style={[styles.valorStat, { fontSize: 16 }]}>Entrada Principal</Text>
+          </View>
+        </View>
+
+        {/* 3. CONTENEDOR DE ACCESOS RECIENTES */}
+        <View style={styles.contenedorAccesos}>
+          <Text style={styles.tituloSeccion}>Accesos Recientes</Text>
+
+          <TarjetaAcceso 
+            datos={{
+              fecha: "08/03/2023 12:45",
+              usuario: "Cervantes Santana Cristobal Eduardo",
+              zona: "Almacen",
+              credencial: "124050867",
+              tipo: "Placa",
+              estado: "Activo"
+            }} 
+          />
+          <TarjetaAcceso 
+            datos={{
+              fecha: "08/03/2023 12:45",
+              usuario: "Cervantes Santana Cristobal Eduardo",
+              zona: "Almacen",
+              credencial: "124050867",
+              tipo: "Placa",
+              estado: "Activo"
+            }} 
           />
         </View>
-      </View>
 
-      <View style={styles.content}>
-        {/* Buscador */}
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Buscar usuario reciente por nombre"
-            placeholderTextColor="#666"
-          />
-        </View>
-
-        {/* Cuadros de Estadísticas */}
-        <View style={styles.statsGrid}>
-          <View style={[styles.statCard, { backgroundColor: "#3498db" }]}>
-            <Text style={styles.statNumber}>1040</Text>
-            <Text style={styles.statLabel}>Registros totales hoy</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: "#8ec444" }]}>
-            <Text style={styles.statNumber}>1000</Text>
-            <Text style={styles.statLabel}>Dentro</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: "#e74c3c" }]}>
-            <Text style={styles.statNumber}>30</Text>
-            <Text style={styles.statLabel}>Salidas</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: "#e67e22" }]}>
-            <Text style={styles.statNumber}>10</Text>
-            <Text style={styles.statLabel}>Visitantes</Text>
-          </View>
-        </View>
-
-        <Text style={styles.sectionTitle}>Actividad Reciente</Text>
-
-        {/* Lista de Actividad */}
-        <FlatList
-          data={actividadReciente}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.activityCard}>
-              <View
-                style={[
-                  styles.statusIndicator,
-                  { backgroundColor: item.status },
-                ]}
-              />
-              <View>
-                <Text style={styles.personName}>{item.nombre}</Text>
-                <Text style={styles.activityTime}>{item.hora}</Text>
-              </View>
-            </View>
-          )}
-        />
-      </View>
-    </View>
-  );
+      </ScrollView>
+    </SafeAreaView>
+  )
 }
 
+const TarjetaAcceso = ({ datos }) => (
+  <View style={styles.tarjetaFila}>
+    <Fila label="Fecha y Hora" value={datos.fecha} />
+    <Fila label="Usuario" value={datos.usuario} />
+    <Fila label="Zona" value={datos.zona} />
+    <Fila label="Credencial" value={datos.credencial} />
+    <Fila label="Tipo" value={datos.tipo} />
+    <Fila label="Estado" value={datos.estado} esUltimo />
+  </View>
+);
+
+const Fila = ({ label, value, esUltimo }) => (
+  <View style={[styles.fila, esUltimo && { borderBottomWidth: 0 }]}>
+    <View style={styles.colEtiqueta}><Text style={styles.textoEtiqueta}>{label}</Text></View>
+    <View style={styles.colValor}><Text style={styles.textoValor}>{value}</Text></View>
+  </View>
+);
+
 const styles = StyleSheet.create({
-  mainContainer: {
-    flex: 1,
-    backgroundColor: '#CFE2EB', // Color azul clarito del fondo
-  },
-  header: {
-    backgroundColor: '#34495e',
-    paddingTop: 10,
-    paddingHorizontal: 20,
-    paddingBottom: 0,
+  contenedor: { flex: 1, backgroundColor: '#C8DFEA' },
+  areaScroll: { paddingHorizontal: 15, paddingTop: 15, paddingBottom: 110 },
+  
+  // Encabezado
+  encabezadoBlanco: {
+    backgroundColor: '#FFF',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  headerTitle: {
-    color: 'white',
-    fontSize: 17,
-    fontWeight: 'bold',
-  },
-  headerSubtitle: {
-    color: '#bdc3c7',
-    fontSize: 13,
-  },
-  logoPlaceholder: {
-    width: 40,
-    height: 40,
-    backgroundColor: 'white',
-    borderRadius: 20,
-    opacity: 0.8,
-  },
-  content: {
-    flex: 1,
-    padding: 15,
-  },
-  searchContainer: {
-    backgroundColor: 'white',
-    borderRadius: 25,
-    paddingHorizontal: 15,
-    marginBottom: 20,
-    height: 45,
-    justifyContent: 'center',
-    elevation: 2,
-  },
-  searchInput: {
-    fontSize: 14,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  statCard: {
-    width: '48%',
-    height: 80,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-    padding: 5,
-  },
-  statNumber: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  statLabel: {
-    color: 'white',
-    fontSize: 11,
-    textAlign: 'center',
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#2c3e50',
+    padding: 18,
+    borderRadius: 15,
     marginBottom: 15,
   },
-  activityCard: {
-    backgroundColor: '#3c5a6b', // Color grisáceo azulado de las filas
-    borderRadius: 30,
+  textoTitulo: { fontSize: 25, color: '#365563', fontFamily: "Ultra" },
+  badgePerfil: { flexDirection: 'row', alignItems: 'center', padding: 8, borderRadius: 12, borderWidth: 1, borderColor: '#355563' },
+  iconoPerfil: { width: 20, height: 20, borderRadius: 10, borderWidth: 1.5, borderColor: '#365563', marginRight: 6 },
+  nombrePerfil: { color: '#365563', fontSize: 14 },
+
+  // Stats
+  cuadricula: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 5 },
+  cajaStat: { width: '48%', backgroundColor: '#FFF', padding: 12, borderRadius: 12, marginBottom: 15, height: 100, justifyContent: 'space-between' },
+  etiquetaStat: { fontSize: 11, color: '#608da2', fontFamily: "Ultra" },
+  valorStat: { fontSize: 20, color: '#365563', fontFamily: "Ultra" },
+
+  // CONTENEDOR BLANCO DE ACCESOS RECIENTES
+  contenedorAccesos: {
+    backgroundColor: '#FFF',
+    borderRadius: 15,
     padding: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
+    marginTop: 5,
   },
-  statusIndicator: {
-    width: 15,
-    height: 15,
-    borderRadius: 7.5,
-    marginRight: 15,
-  },
-  personName: {
-    color: 'white',
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  activityTime: {
-    color: '#bdc3c7',
-    fontSize: 11,
-    marginTop: 2,
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginTop: 0,
-    zIndex: 10,
-  },
-  logo: {
-    width: 50,
-    height: 50,
-    marginBottom: 0,
-    resizeMode: "contain",
-  },
+  tituloSeccion: { fontSize: 20, color: '#365563', marginBottom: 15, fontFamily: "Ultra" },
+  
+  // Tablas internas
+  tarjetaFila: { backgroundColor: '#C8DFEA', borderRadius: 8, overflow: 'hidden', marginBottom: 15, borderWidth: 2, borderColor: '#FFF' },
+  fila: { flexDirection: 'row', borderBottomWidth: 3, borderBottomColor: '#FFF' },
+  colEtiqueta: { width: '38%', backgroundColor: '#365563', padding: 10, justifyContent: 'center' },
+  textoEtiqueta: { color: '#FFF', fontSize: 12, fontFamily: "Ultra" },
+  colValor: { width: '62%', padding: 10, justifyContent: 'center' },
+  textoValor: { color: '#365563', fontSize: 12, },
+
 })
