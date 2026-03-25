@@ -10,6 +10,7 @@ import {
   Alert,
 } from "react-native";
 import React, { useState, useEffect } from "react";
+import { useFonts } from 'expo-font';
 const { width, height } = Dimensions.get("window");
 
 // Funcion Pantalla de carga
@@ -49,6 +50,7 @@ const Login = () => {
         <Image
           source={require("../assets/logo2.png")}
           style={stylesLogin.logo}
+          resizeMode="contain"
         />
       </View>
 
@@ -103,17 +105,21 @@ const Login = () => {
 };
 
 export default function InicioSesion() {
+  const [fontsLoaded] = useFonts({
+    Ultra: require("../assets/fonts/DelaGothicOne-Regular.ttf"),
+  });
   const [inicioApp, setInicioApp] = useState(true);
-
+  
   useEffect(() => {
     const tiempo = setTimeout(() => {
       setInicioApp(false);
     }, 3000);
-
+    
     return () => clearTimeout(tiempo);
   }, []);
-
+  
   if (inicioApp) {
+  
     return <PantallaInicial />;
   } else {
     return <Login />;
@@ -147,31 +153,36 @@ const stylesLogin = StyleSheet.create({
     flex: 1,
     backgroundColor: "#365563",
     alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 20,
-    paddingVertical: 30,
   },
 
   logoContainer: {
     alignItems: "center",
-    marginTop: 0,
-    zIndex: 10,
+    marginBottom: 20, 
   },
 
   logo: {
-    width: 150,
-    height: 150,
-    marginBottom: 0,
-    resizeMode: "contain",
+    width: 120,
+    height: 120,
+  },
+
+  containerInput: {
+    width: "100%",
+    maxWidth: 400,
+    backgroundColor: "#8EB1C2",
+    borderRadius: 25,
+    paddingVertical: 30,
+    paddingHorizontal: 20,
+    alignItems: "center",
   },
 
   titulo: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 40,
-    alignSelf: "CENTER",
-    color: "#000",
-    zIndex: 20,
-    fontFamily: "Montserrat",
+    fontSize: 34,
+    marginBottom: 25,
+    alignSelf: "center",
+    color: "#365563",
+    fontFamily: "Ultra",
   },
 
   input: {
@@ -180,17 +191,13 @@ const stylesLogin = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 25,
     paddingHorizontal: 20,
-    marginBottom: 40,
+    marginBottom: 15,
     fontSize: 16,
     borderWidth: 1,
     borderColor: "#8EB1C2",
     elevation: 5,
-    shadowColor: "#8EB1C2",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
+    boxShadow: "0px 2px 4px rgba(142,177,194,0.3)",
     fontFamily: "Montserrat",
-    zIndex: 10,
   },
 
   botonSesion: {
@@ -200,8 +207,7 @@ const stylesLogin = StyleSheet.create({
     borderRadius: 25,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 0,
-    zIndex: 10,
+    marginTop: 10,
   },
 
   botonText: {
@@ -212,31 +218,15 @@ const stylesLogin = StyleSheet.create({
   },
 
   linksContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
     width: "100%",
-    marginTop:30,
-    paddingHorizontal: 10,
-    paddingVertical: 30,
-    zIndex: 10,
+    marginTop: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
 
   linkText: {
     color: "#365563",
-    fontSize: 14,
-    paddingHorizontal: 15,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-
-  containerInput: {
-    flex: 1,
-    backgroundColor: "#8EB1C2",
-    alignItems: "center",
-    paddingHorizontal: 30,
-    paddingVertical: 20,
-    margin: 40,
-    borderRadius: 15,
+    fontSize: 13,
+    fontFamily: "Montserrat",
   },
 });
