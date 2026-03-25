@@ -5,7 +5,7 @@ import { useFonts } from 'expo-font';
 
 export default function Vehiculos() {
   const [fontsLoaded] = useFonts({
-    Ultra: require("../../assets/fonts/DelaGothicOne-Regular.ttf"),
+    Ultra: require("../assets/fonts/DelaGothicOne-Regular.ttf"),
   });
 
   if (!fontsLoaded) return null;
@@ -25,18 +25,8 @@ export default function Vehiculos() {
 
         {/* 2. Filtros y Búsqueda */}
         <View style={styles.contenedorFiltros}>
-          <TextInput 
-            style={styles.inputBusqueda} 
-            placeholder="Buscar propietario, placa o modelo" 
-            placeholderTextColor="#365563"
-          />
-          
           <View style={styles.filaFiltros}>
-            <TouchableOpacity style={styles.selectorFiltro}>
-              <Text style={styles.textoFiltro}>Estatus</Text>
-              <View style={styles.trianguloFlecha} />
-            </TouchableOpacity>
-
+            <Text style={styles.tituloSeccion}>Registro{'\n'}Vehicular</Text>
             <TouchableOpacity style={styles.botonAgregar}>
               <Text style={styles.textoAgregar}>+ Agregar</Text>
             </TouchableOpacity>
@@ -55,26 +45,6 @@ export default function Vehiculos() {
               estado: "Activo"
             }} 
           />
-          <TarjetaVehiculo 
-            datos={{
-              id: "2",
-              modelo: "Nissan Versa",
-              placa: "XYZ-456",
-              propietario: "Maria Lopez",
-              descripcion: "Vehiculo administrativo",
-              estado: "Activo"
-            }} 
-          />
-          <TarjetaVehiculo 
-            datos={{
-              id: "3",
-              modelo: "Chevrolet Aveo",
-              placa: "QWE-789",
-              propietario: "Carlos Perez",
-              descripcion: "Vehiculo de carga",
-              estado: "Inactivo"
-            }} 
-          />
         </View>
 
       </ScrollView>
@@ -84,26 +54,11 @@ export default function Vehiculos() {
 
 const TarjetaVehiculo = ({ datos }) => (
   <View style={styles.tarjetaFila}>
-    <Fila label="ID" value={datos.id} />
     <Fila label="Modelo" value={datos.modelo} />
     <Fila label="Placa" value={datos.placa} />
     <Fila label="Propietario" value={datos.propietario} />
     <Fila label="Descripcion" value={datos.descripcion} />
     <Fila label="Estado" value={datos.estado} />
-    
-    <View style={styles.filaAcciones}>
-      <View style={styles.colEtiquetaAccion}>
-        <Text style={styles.textoEtiqueta}>Acciones</Text>
-      </View>
-      <View style={styles.colValorAccion}>
-        <TouchableOpacity style={styles.botonEditar}>
-          <Text style={styles.textoBotonAccion}>Editar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.botonBorrar}>
-          <Text style={styles.textoBotonAccion}>Borrar</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
   </View>
 );
 
@@ -138,39 +93,12 @@ const styles = StyleSheet.create({
     padding: 15,
     marginBottom: 15,
   },
-  inputBusqueda: {
-    backgroundColor: '#C8DFEA',
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    color: '#365563',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#365563',
-  },
   filaFiltros: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  selectorFiltro: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#C8DFEA',
-    paddingHorizontal: 12,
-    height: 40,
-    borderRadius: 8,
-    width: '45%',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: '#365563',
-  },
-  textoFiltro: { color: '#365563', fontSize: 12 },
-  trianguloFlecha: {
-    width: 0, height: 0,
-    borderLeftWidth: 5, borderRightWidth: 5, borderTopWidth: 8,
-    borderLeftColor: 'transparent', borderRightColor: 'transparent', borderTopColor: '#365563',
-  },
+  tituloSeccion: { fontSize: 20, color: '#365563', marginBottom: 15, fontFamily: "Ultra" },
   botonAgregar: {
     backgroundColor: '#C8DFEA',
     paddingHorizontal: 15,
@@ -180,8 +108,10 @@ const styles = StyleSheet.create({
     borderColor: '#365563',
     justifyContent: 'center',
   },
-  textoAgregar: { color: '#365563', fontSize: 12 },
-
+  textoAgregar: { 
+    color: '#365563', 
+    fontSize: 12 
+  },
   contenedorLista: {
     backgroundColor: '#FFF',
     borderRadius: 15,
@@ -193,12 +123,4 @@ const styles = StyleSheet.create({
   textoEtiqueta: { color: '#FFF', fontSize: 11, fontFamily: "Ultra" },
   colValor: { width: '65%', padding: 10, justifyContent: 'center' },
   textoValor: { color: '#365563', fontSize: 12 },
-
-  filaAcciones: { flexDirection: 'row' },
-  colEtiquetaAccion: { width: '35%', backgroundColor: '#365563', padding: 10, justifyContent: 'center' },
-  colValorAccion: { width: '65%', padding: 10, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
-  botonEditar: { backgroundColor: '#FFF', paddingVertical: 5, paddingHorizontal: 15, borderRadius: 15 },
-  botonBorrar: { backgroundColor: '#FF0000', paddingVertical: 5, paddingHorizontal: 15, borderRadius: 15 },
-  textoBotonAccion: { fontSize: 11, color: '#000' },
-
 });
