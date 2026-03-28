@@ -3,6 +3,7 @@ import React from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useFonts } from 'expo-font';
 
+
 export default function Dashboard() {
   const [fontsLoaded] = useFonts({
     Ultra: require("../assets/fonts/DelaGothicOne-Regular.ttf"),

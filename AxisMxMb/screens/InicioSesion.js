@@ -9,11 +9,11 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
+import { useAuth  } from "../context/AuthContext";
 import React, { useState, useEffect } from "react";
 const { width, height } = Dimensions.get("window");
 
 // Funcion Pantalla de carga
-
 const PantallaInicial = () => {
   return (
     <View style={stylesIntro.pantallaInicialContainer}>
@@ -27,10 +27,11 @@ const PantallaInicial = () => {
 
 // Funcion Inicio de sesion
 
-const Login = () => {
+const Login = ({navigation}) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -41,6 +42,14 @@ const Login = () => {
     setLoading(true);
     const result = await login(email, password);
     setLoading(false);
+
+    if (!result.success) {
+      Alert.alert("Error", result.message || "Credenciales incorrectas");
+    }
+  };
+
+  const handleRegister = () => {
+    navigation.navigate("Registro");
   };
 
   return (
@@ -86,14 +95,13 @@ const Login = () => {
           )}
         </TouchableOpacity>
 
+
         <View style={stylesLogin.linksContainer}>
           <TouchableOpacity>
-            <Text style={stylesLogin.linkText}>
-              ¿Has olvidado tu contraseña?
-            </Text>
+            <Text style={stylesLogin.linkText}>¿Olvidaste tu contraseña?</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity>
+          <TouchableOpacity onPress={handleRegister}>
             <Text style={stylesLogin.linkText}>Crear cuenta</Text>
           </TouchableOpacity>
         </View>
@@ -102,7 +110,7 @@ const Login = () => {
   );
 };
 
-export default function InicioSesion() {
+export default function InicioSesion({ navigation }) {
   const [inicioApp, setInicioApp] = useState(true);
 
   useEffect(() => {
@@ -116,127 +124,98 @@ export default function InicioSesion() {
   if (inicioApp) {
     return <PantallaInicial />;
   } else {
-    return <Login />;
+    return <Login navigation={navigation} />;
   }
 }
 
 const stylesIntro = StyleSheet.create({
   pantallaInicialContainer: {
     flex: 1,
+    backgroundColor: "#114B5F",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#365563",
   },
-
   logo: {
-    width: 100,
-    height: 100,
+    width: width * 0.4,
+    height: width * 0.4,
     resizeMode: "contain",
   },
-
   nombreApp: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "bold",
-    color: "white",
-    marginTop: 10,
+    color: "#FFFFFF",
+    marginTop: 20,
   },
 });
 
 const stylesLogin = StyleSheet.create({
   containerLogin: {
     flex: 1,
-    backgroundColor: "#365563",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 30,
+    backgroundColor: "#114B5F",
   },
-
   logoContainer: {
     alignItems: "center",
-    marginTop: 0,
-    zIndex: 10,
+    marginTop: height * 0.1,
   },
-
   logo: {
-    width: 150,
-    height: 150,
-    marginBottom: 0,
+    width: width * 0.3,
+    height: width * 0.3,
     resizeMode: "contain",
   },
-
+  containerInput: {
+    flex: 1,
+    backgroundColor: "#F5F5F5",
+    marginTop: 30,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    alignItems: "center",
+    paddingTop: 30,
+  },
   titulo: {
     fontSize: 28,
     fontWeight: "bold",
-    marginBottom: 40,
-    alignSelf: "CENTER",
-    color: "#000",
-    zIndex: 20,
-    fontFamily: "Montserrat",
+    color: "#114B5F",
+    marginBottom: 5,
   },
-
+  subtitulo: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 30,
+  },
   input: {
-    width: "100%",
+    width: width * 0.8,
     height: 50,
     backgroundColor: "white",
-    borderRadius: 25,
-    paddingHorizontal: 20,
-    marginBottom: 40,
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    marginBottom: 15,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: "#8EB1C2",
-    elevation: 5,
-    shadowColor: "#8EB1C2",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    fontFamily: "Montserrat",
-    zIndex: 10,
+    borderColor: "#E0E0E0",
   },
-
   botonSesion: {
-    width: "100%",
+    width: width * 0.8,
     height: 50,
-    backgroundColor: "#365563",
-    borderRadius: 25,
+    backgroundColor: "#114B5F",
+    borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 0,
-    zIndex: 10,
+    marginTop: 20,
   },
-
   botonText: {
-    color: "#ffffff",
+    color: "white",
     fontSize: 18,
     fontWeight: "bold",
-    fontFamily: "Montserrat",
   },
-
   linksContainer: {
     flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    width: "100%",
-    marginTop:30,
-    paddingHorizontal: 10,
-    paddingVertical: 30,
-    zIndex: 10,
+    justifyContent: "space-between",
+    width: width * 0.8,
+    marginTop: 20,
   },
-
   linkText: {
-    color: "#365563",
+    color: "#114B5F",
     fontSize: 14,
-    paddingHorizontal: 15,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-
-  containerInput: {
-    flex: 1,
-    backgroundColor: "#8EB1C2",
-    alignItems: "center",
-    paddingHorizontal: 30,
-    paddingVertical: 20,
-    margin: 40,
-    borderRadius: 15,
+    textDecorationLine: "underline",
   },
 });
