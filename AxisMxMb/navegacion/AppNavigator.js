@@ -1,38 +1,38 @@
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import Icon from 'react-native-vector-icons/Ionicons';
+import colors from '../utils/colors';
 
 // Pantallas de autenticación
-import InicioSesion from './screens/InicioSesion';
-import RegistroUsuario from './screens/RegistroUsuario';
+import InicioSesion from '../screens/InicioSesion';
+import RegistroUsuario from '../screens/RegistroUsuario';
 
-// Pantallas para ADMINISTRADORES (rol: Administrador, Seguridad)
-import Dashboard from './screens/Dashboard';
-import ScannerScreen from './screens/ScannerScreen';
-import Perfil from './screens/Perfil';
+// Pantallas de administrador
+import Dashboard from '../screens/Dashboard';
+import ScannerScreen from '../screens/ScannerScreen';
+import Perfil from '../screens/Perfil';
 
-// Pantallas de gestión (solo admin)
-import Usuarios from './screens/OpcionesScreens/Usuarios';
-import Vehiculos from './screens/OpcionesScreens/Vehiculos';
-import Roles from './screens/OpcionesScreens/Roles';
-import MetodosAcceso from './screens/OpcionesScreens/MetodosAcceso';
-import Visitantes from './screens/OpcionesScreens/Visitantes';
-import RegistrosAcceso from './screens/OpcionesScreens/RegistrosAcceso';
+// Pantallas de gestión (admin)
+import Usuarios from '../screens/OpcionesScreens/Usuarios';
+import Vehiculos from '../screens/OpcionesScreens/Vehiculos';
+import Roles from '../screens/OpcionesScreens/Roles';
+import MetodosAcceso from '../screens/OpcionesScreens/MetodosAcceso';
+import Visitantes from '../screens/OpcionesScreens/Visitantes';
+import RegistrosAcceso from '../screens/OpcionesScreens/RegistrosAcceso';
 
-// Pantallas para USUARIOS NORMALES (rol: Alumno, Maestro, Visitante, etc.)
-// NOTA: Si no existen estas pantallas, créalas o coméntalas por ahora
-import DashboardUsuario from './screens/DashboardUsuario';
-import MiCredencial from './screens/MiCredencial';
-import MisAccesos from './screens/MisAccesos';
-
+// Pantallas de usuario normal (crear si no existen)
+// import DashboardUsuario from '../screens/DashboardUsuario';
+// import MiCredencial from '../screens/MiCredencial';
+// import MisAccesos from '../screens/MisAccesos';
+// import MiPerfil from '../screens/MiPerfil';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// ============ TABS PARA ADMINISTRADORES ============
+// Tabs para administradores
 function AdminTabs() {
   return (
     <Tab.Navigator
@@ -50,8 +50,8 @@ function AdminTabs() {
           }
           return <Icon name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#114B5F',
-        tabBarInactiveTintColor: '#888',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.gray,
         headerShown: false,
       })}
     >
@@ -63,27 +63,7 @@ function AdminTabs() {
   );
 }
 
-// ============ STACK PARA ADMINISTRADORES ============
-function AdminStack() {
-  return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: '#114B5F' },
-        headerTintColor: '#fff',
-        headerBackTitle: 'Atrás',
-      }}
-    >
-      <Stack.Screen name="MainTabs" component={AdminTabs} options={{ headerShown: false }} />
-      <Stack.Screen name="Usuarios" component={Usuarios} options={{ title: 'Gestión de Usuarios' }} />
-      <Stack.Screen name="Vehiculos" component={Vehiculos} options={{ title: 'Gestión de Vehículos' }} />
-      <Stack.Screen name="Roles" component={Roles} options={{ title: 'Gestión de Roles' }} />
-      <Stack.Screen name="MetodosAcceso" component={MetodosAcceso} options={{ title: 'Métodos de Acceso' }} />
-      <Stack.Screen name="Visitantes" component={Visitantes} options={{ title: 'Gestión de Visitantes' }} />
-    </Stack.Navigator>
-  );
-}
-
-// ============ TABS PARA USUARIOS NORMALES ============
+// Tabs para usuarios normales
 function UserTabs() {
   return (
     <Tab.Navigator
@@ -101,8 +81,8 @@ function UserTabs() {
           }
           return <Icon name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#114B5F',
-        tabBarInactiveTintColor: '#888',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.gray,
         headerShown: false,
       })}
     >
@@ -114,13 +94,33 @@ function UserTabs() {
   );
 }
 
-// ============ STACK PARA USUARIOS NORMALES ============
+// Stack para administradores
+function AdminStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.primary },
+        headerTintColor: colors.white,
+        headerBackTitle: 'Atrás',
+      }}
+    >
+      <Stack.Screen name="MainTabs" component={AdminTabs} options={{ headerShown: false }} />
+      <Stack.Screen name="Usuarios" component={Usuarios} options={{ title: 'Gestión de Usuarios' }} />
+      <Stack.Screen name="Vehiculos" component={Vehiculos} options={{ title: 'Gestión de Vehículos' }} />
+      <Stack.Screen name="Roles" component={Roles} options={{ title: 'Gestión de Roles' }} />
+      <Stack.Screen name="MetodosAcceso" component={MetodosAcceso} options={{ title: 'Métodos de Acceso' }} />
+      <Stack.Screen name="Visitantes" component={Visitantes} options={{ title: 'Gestión de Visitantes' }} />
+    </Stack.Navigator>
+  );
+}
+
+// Stack para usuarios normales
 function UserStack() {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: '#114B5F' },
-        headerTintColor: '#fff',
+        headerStyle: { backgroundColor: colors.primary },
+        headerTintColor: colors.white,
       }}
     >
       <Stack.Screen name="UserTabs" component={UserTabs} options={{ headerShown: false }} />
@@ -128,7 +128,7 @@ function UserStack() {
   );
 }
 
-// ============ STACK DE AUTENTICACIÓN ============
+// Stack de autenticación
 function AuthStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -138,8 +138,8 @@ function AuthStack() {
   );
 }
 
-// ============ NAVEGADOR PRINCIPAL ============
-function AppNavigator() {
+// Navegador principal
+export default function AppNavigator() {
   const { isAuthenticated, loading, userRole } = useAuth();
 
   if (loading) {
@@ -150,26 +150,13 @@ function AppNavigator() {
     return <AuthStack />;
   }
 
-  // Roles que van a la app de administración
+  // Roles permitidos para la app de administración
   const adminRoles = ['Administrador', 'Seguridad'];
   
   if (adminRoles.includes(userRole)) {
     return <AdminStack />;
   }
 
-  // Todos los demás roles van a la app de usuario
+  // Usuarios normales
   return <UserStack />;
-}
-
-// ============ APP PRINCIPAL ============
-export default function App() {
-  return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <NavigationContainer>
-          <AppNavigator />
-        </NavigationContainer>
-      </AuthProvider>
-    </SafeAreaProvider>
-  );
 }

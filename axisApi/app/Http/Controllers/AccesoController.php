@@ -2,232 +2,96 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Usuario;
-use App\Models\Rol;
+use App\Models\RegistroAcceso;
+use App\Models\Credencial;
+use App\Models\Vehiculo;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class AccesoController extends Controller
 {
-    public function login(Request $request)
+    public function verificarCredencial(Request $request)
     {
-        // Validar que enviaron el correo y la contraseña
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required'
-        ]);
-
-        // Buscar el usuario por su email
-        $usuario = Usuario::with('rol')->where('Email', $request->email)->first();
-
-        // Verificar si el usuario existe
-        if (!$usuario) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Credenciales incorrectas'
-            ], 401);
-        }
-
-        // Verificar contraseña
-        if (!Hash::check($request->password, $usuario->password)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Credenciales incorrectas'
-            ], 401);
-        }
-
-        // Verificar que sea Administrador o Seguridad
-        $rolesPermitidos = ['Administrador', 'Seguridad'];
-        $rolUsuario = $usuario->rol->Nombre_Rol ?? '';
-
-        if (!in_array($rolUsuario, $rolesPermitidos)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No tienes permisos para acceder a esta aplicacion'
-            ], 403);
-        }
-
-        // Crear el token
-        $token = $usuario->createToken('auth-token')->plainTextToken;
-
-        // Respuesta
-        return response()->json([
-            'success' => true,
-            'message' => 'Inicio de sesion exitoso',
-            'data' => [
-                'user' => [
-                    'id' => $usuario->ID_Usuario,
-                    'nombre' => $usuario->Nombre,
-                    'apellido_paterno' => $usuario->Ap_Paterno,
-                    'email' => $usuario->Email,
-                    'rol' => $rolUsuario
-                ],
-                'token' => $token,
-                'token_type' => 'Bearer'
-            ]
-        ]);
+        // Lógica para verificar credencial
+        // ...
     }
 
-    public function register(Request $request)
+    public function verificarPlaca(Request $request)
+    {
+        // Lógica para verificar placa
+        // ...
+    }
+
+    public function historial(Request $request)
+    {
+        // Lógica para obtener historial
+        // ...
+    }
+
+    public function stats(Request $request)
     {
         try {
-            $request->validate([
-                'nombre' => 'required|string|max:100',
-                'apellido_paterno' => 'required|string|max:100',
-                'apellido_materno' => 'nullable|string|max:100',
-                'email' => 'required|email|unique:Usuarios,Email',
-                'password' => 'required|string|min:6|confirmed',
-                'matricula' => 'nullable|string|max:9|unique:Usuarios,Matricula',
-                'numero_empleado' => 'nullable|string|max:20|unique:Usuarios,Numero_Empleado',
-                'telefono' => 'nullable|string|max:20',
-            ]);
-
-            // Validar que tenga matricula o numero de empleado
-            if (!$request->matricula && !$request->numero_empleado) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Debes proporcionar matricula o numero de empleado'
-                ], 400);
-            }
-
-            // Buscar el rol "Visitante"
-            $rolVisitante = Rol::where('Nombre_Rol', 'Visitante')->first();
-
-            if (!$rolVisitante) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error en la configuracion del sistema. Contacte al administrador.'
-                ], 500);
-            }
-
-            // Crear usuario con estado INACTIVO (ID_Estado = 2)
-            $usuario = Usuario::create([
-                'Matricula' => $request->matricula,
-                'Numero_Empleado' => $request->numero_empleado,
-                'Nombre' => $request->nombre,
-                'Ap_Paterno' => $request->apellido_paterno,
-                'Ap_Materno' => $request->apellido_materno,
-                'Email' => $request->email,
-                'Telefono' => $request->telefono,
-                'Empresa' => $request->empresa,
-                'ID_Rol' => $rolVisitante->ID_Rol,
-                'password' => Hash::make($request->password),
-                'ID_Estado' => 2,
-            ]);
-
-            Log::info('Nuevo registro de usuario', [
-                'user_id' => $usuario->ID_Usuario,
-                'email' => $usuario->Email,
-                'status' => 'inactivo'
-            ]);
-
+            $vehiculares = RegistroAcceso::where('ID_Tipo_Acceso', 2)
+                ->whereBetween('Fecha_Hora', [now()->startOfWeek(), now()->endOfWeek()])
+                ->count();
+                
+            $peatonales = RegistroAcceso::where('ID_Tipo_Acceso', 1)
+                ->whereBetween('Fecha_Hora', [now()->startOfWeek(), now()->endOfWeek()])
+                ->count();
+                
+            $zonas = ['Entrada Principal', 'Entrada Secundaria', 'Estacionamiento Norte', 'Estacionamiento Sur'];
+            $zonaMasTrafico = $zonas[array_rand($zonas)];
+            
             return response()->json([
                 'success' => true,
-                'message' => 'Registro exitoso. Tu cuenta esta pendiente de activacion por un administrador.',
                 'data' => [
-                    'id' => $usuario->ID_Usuario,
-                    'nombre' => $usuario->Nombre,
-                    'email' => $usuario->Email,
-                    'estado' => 'Inactivo'
+                    'accesosVehiculares' => $vehiculares,
+                    'accesosPeatonales' => $peatonales,
+                    'totalAccesos' => $vehiculares + $peatonales,
+                    'zonaMasTrafico' => $zonaMasTrafico
                 ]
-            ], 201);
-
-        } catch (\Exception $e) {
-            Log::error('Error en registro', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
             ]);
-
+            
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error en el servidor: ' . $e->getMessage()
+                'message' => 'Error al obtener estadísticas'
             ], 500);
         }
     }
 
-    public function pendingUsers(Request $request)
+    public function recent(Request $request)
     {
         try {
-            $admin = $request->user();
-            if (!$admin || !in_array($admin->rol->Nombre_Rol ?? '', ['Administrador', 'Seguridad'])) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No tienes permisos'
-                ], 403);
-            }
-
-            $usuarios = Usuario::with('rol')
-                ->where('ID_Estado', 2)
-                ->orderBy('Fecha_Creacion', 'desc')
-                ->get();
-
+            $limit = $request->get('limit', 10);
+            
+            $registros = RegistroAcceso::with(['credencial.usuario', 'vehiculo', 'tipoAcceso'])
+                ->orderBy('Fecha_Hora', 'desc')
+                ->limit($limit)
+                ->get()
+                ->map(function($registro) {
+                    $zonas = ['Entrada Principal', 'Entrada Secundaria', 'Estacionamiento Norte', 'Estacionamiento Sur'];
+                    return [
+                        'ID_Registro' => $registro->ID_Registro,
+                        'Fecha_Hora' => $registro->Fecha_Hora,
+                        'Acceso_Autorizado' => $registro->Acceso_Autorizado,
+                        'usuario' => $registro->credencial ? $registro->credencial->usuario : null,
+                        'tipoAcceso' => $registro->tipoAcceso,
+                        'Codigo_Credencial' => $registro->credencial ? $registro->credencial->Codigo_Credencial : null,
+                        'Placa' => $registro->vehiculo ? $registro->vehiculo->Placa : null,
+                        'zona' => $zonas[array_rand($zonas)]
+                    ];
+                });
+                
             return response()->json([
                 'success' => true,
-                'data' => $usuarios
+                'data' => $registros
             ]);
-
+            
         } catch (\Exception $e) {
-            Log::error('Error al obtener usuarios pendientes', [
-                'error' => $e->getMessage()
-            ]);
-
             return response()->json([
                 'success' => false,
-                'message' => 'Error al obtener usuarios pendientes'
-            ], 500);
-        }
-    }
-
-    public function activateUser($id, Request $request)
-    {
-        try {
-            $admin = $request->user();
-            if (!$admin || !in_array($admin->rol->Nombre_Rol ?? '', ['Administrador', 'Seguridad'])) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No tienes permisos para activar usuarios'
-                ], 403);
-            }
-
-            $usuario = Usuario::find($id);
-
-            if (!$usuario) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Usuario no encontrado'
-                ], 404);
-            }
-
-            $usuario->ID_Estado = 1;
-            $usuario->save();
-
-            Log::info('Usuario activado', [
-                'admin_id' => $admin->ID_Usuario,
-                'user_id' => $usuario->ID_Usuario,
-                'user_email' => $usuario->Email
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Usuario activado exitosamente',
-                'data' => [
-                    'id' => $usuario->ID_Usuario,
-                    'email' => $usuario->Email,
-                    'estado' => 'Activo'
-                ]
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error al activar usuario', [
-                'error' => $e->getMessage(),
-                'user_id' => $id
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al activar usuario'
+                'message' => 'Error al obtener accesos recientes'
             ], 500);
         }
     }

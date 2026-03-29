@@ -1,87 +1,151 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
+import { userService } from '../../services/api';
 
 export default function Usuarios() {
   const [fontsLoaded] = useFonts({
     Ultra: require("../../assets/fonts/DelaGothicOne-Regular.ttf"),
   });
 
+  const [usuarios, setUsuarios] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [busqueda, setBusqueda] = useState('');
+
+  const cargarUsuarios = async () => {
+    const result = await userService.getAll();
+    if (result.success) {
+      setUsuarios(result.data);
+    } else {
+      Alert.alert('Error', result.message);
+    }
+    setLoading(false);
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await cargarUsuarios();
+    setRefreshing(false);
+  };
+
+  const usuariosFiltrados = () => {
+    if (busqueda === '') return usuarios;
+    
+    return usuarios.filter(usuario => {
+      const nombreCompleto = `${usuario.Nombre} ${usuario.Ap_Paterno}`.toLowerCase();
+      const busquedaLower = busqueda.toLowerCase();
+      
+      return (
+        nombreCompleto.includes(busquedaLower) ||
+        usuario.Email?.toLowerCase().includes(busquedaLower) ||
+        usuario.Matricula?.toLowerCase().includes(busquedaLower)
+      );
+    });
+  };
+
+  useEffect(() => {
+    cargarUsuarios();
+  }, []);
+
   if (!fontsLoaded) return null;
+
+  if (loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#114B5F" />
+        <Text style={styles.loadingText}>Cargando usuarios...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.contenedor}>
-      <ScrollView contentContainerStyle={styles.areaScroll} showsVerticalScrollIndicator={false}>
+      <View style={styles.encabezadoBlanco}>
+        <Text style={styles.textoTitulo}>Usuarios</Text>
+        <TouchableOpacity style={styles.badgePerfil}>
+          <View style={styles.iconoPerfil} />
+          <Text style={styles.nombrePerfil}>Admin</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.contenedorFiltros}>
+        <TextInput 
+          style={styles.inputBusqueda} 
+          placeholder="Buscar usuario por nombre, email o matrícula" 
+          placeholderTextColor="#365563"
+          value={busqueda}
+          onChangeText={setBusqueda}
+        />
         
-        {/* 1. Encabezado */}
-        <View style={styles.encabezadoBlanco}>
-          <Text style={styles.textoTitulo}>Usuarios</Text>
-          <TouchableOpacity style={styles.badgePerfil}>
-             <View style={styles.iconoPerfil} />
-             <Text style={styles.nombrePerfil}>Cristobal</Text>
+        <View style={styles.filaFiltros}>
+          <TouchableOpacity style={styles.selectorFiltro}>
+            <Text style={styles.textoFiltro}>Filtrar por rol</Text>
+            <View style={styles.trianguloFlecha} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.botonAgregar}>
+            <Text style={styles.textoAgregar}>+ Agregar</Text>
           </TouchableOpacity>
         </View>
+      </View>
 
-        {/* 2. Filtros y Búsqueda */}
-        <View style={styles.contenedorFiltros}>
-          <TextInput 
-            style={styles.inputBusqueda} 
-            placeholder="Buscar usuario" 
-            placeholderTextColor="#365563"
+      <FlatList
+        data={usuariosFiltrados()}
+        keyExtractor={(item) => item.ID_Usuario.toString()}
+        renderItem={({ item }) => (
+          <TarjetaUsuario 
+            datos={{
+              id: item.ID_Usuario,
+              usuario: `${item.Nombre} ${item.Ap_Paterno}`,
+              matricula: item.Matricula || 'N/A',
+              email: item.Email,
+              telefono: item.Telefono || 'N/A',
+              estado: item.ID_Estado === 1 ? 'Activo' : 'Inactivo',
+              rol: item.rol?.Nombre_Rol || 'Sin rol'
+            }} 
           />
-          
-          <View style={styles.filaFiltros}>
-            <TouchableOpacity style={styles.selectorFiltro}>
-              <Text style={styles.textoFiltro}>Tipo</Text>
-              <View style={styles.trianguloFlecha} />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.botonAgregar}>
-              <Text style={styles.textoAgregar}>+ Agregar</Text>
-            </TouchableOpacity>
+        )}
+        contentContainerStyle={styles.contenedorLista}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#114B5F']}
+          />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No hay usuarios registrados</Text>
           </View>
-        </View>
-
-        {/* 3. Lista de Usuarios */}
-        <View style={styles.contenedorLista}>
-          <TarjetaUsuario 
-            datos={{
-              id: "8",
-              usuario: "Cervantes Santana Cristobal Eduardo",
-              matricula: "124050867",
-              email: "124050867@upq.edu.mx",
-              telefono: "4421340978",
-              estado: "Activo"
-            }} 
-          />
-          <TarjetaUsuario 
-            datos={{
-              id: "7",
-              usuario: "Lopez Madrigal Isaac",
-              matricula: "124053847",
-              email: "124053847@upq.edu.mx",
-              telefono: "4421360998",
-              estado: "Activo"
-            }} 
-          />
-        </View>
-
-      </ScrollView>
+        }
+      />
     </SafeAreaView>
   );
 }
 
 const TarjetaUsuario = ({ datos }) => (
   <View style={styles.tarjetaFila}>
-    <Fila label="ID" value={datos.id} />
+    <Fila label="ID" value={datos.id.toString()} />
     <Fila label="Usuario" value={datos.usuario} />
-    <Fila label="Matricula" value={datos.matricula} />
+    <Fila label="Rol" value={datos.rol} />
+    <Fila label="Matrícula" value={datos.matricula} />
     <Fila label="Email" value={datos.email} />
-    <Fila label="Telefono" value={datos.telefono} />
+    <Fila label="Teléfono" value={datos.telefono} />
     <Fila label="Estado" value={datos.estado} />
     
-    {/* Fila de Acciones Especial */}
     <View style={styles.filaAcciones}>
       <View style={styles.colEtiquetaAccion}>
         <Text style={styles.textoEtiqueta}>Acciones</Text>
@@ -100,15 +164,28 @@ const TarjetaUsuario = ({ datos }) => (
 
 const Fila = ({ label, value }) => (
   <View style={styles.fila}>
-    <View style={styles.colEtiqueta}><Text style={styles.textoEtiqueta}>{label}</Text></View>
-    <View style={styles.colValor}><Text style={styles.textoValor}>{value}</Text></View>
+    <View style={styles.colEtiqueta}>
+      <Text style={styles.textoEtiqueta}>{label}</Text>
+    </View>
+    <View style={styles.colValor}>
+      <Text style={styles.textoValor}>{value}</Text>
+    </View>
   </View>
 );
 
 const styles = StyleSheet.create({
   contenedor: { flex: 1, backgroundColor: '#C8DFEA' },
-  areaScroll: { paddingHorizontal: 15, paddingTop: 15, paddingBottom: 50 },
-  
+  centerContainer: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    backgroundColor: '#C8DFEA',
+  },
+  loadingText: {
+    marginTop: 10,
+    color: '#365563',
+    fontSize: 14,
+  },
   encabezadoBlanco: {
     backgroundColor: '#FFF',
     flexDirection: 'row',
@@ -116,17 +193,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 18,
     borderRadius: 15,
+    marginHorizontal: 15,
+    marginTop: 15,
     marginBottom: 15,
   },
   textoTitulo: { fontSize: 32, color: '#365563', fontFamily: "Ultra" },
-  badgePerfil: { flexDirection: 'row', alignItems: 'center', padding: 8, borderRadius: 12, borderWidth: 1, borderColor: '#365563' },
-  iconoPerfil: { width: 20, height: 20, borderRadius: 10, borderWidth: 1.5, borderColor: '#365563', marginRight: 6 },
+  badgePerfil: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    padding: 8, 
+    borderRadius: 12, 
+    borderWidth: 1, 
+    borderColor: '#365563' 
+  },
+  iconoPerfil: { 
+    width: 20, 
+    height: 20, 
+    borderRadius: 10, 
+    borderWidth: 1.5, 
+    borderColor: '#365563', 
+    marginRight: 6 
+  },
   nombrePerfil: { color: '#365563', fontSize: 14 },
 
   contenedorFiltros: {
     backgroundColor: '#FFF',
     borderRadius: 15,
     padding: 15,
+    marginHorizontal: 15,
     marginBottom: 15,
   },
   inputBusqueda: {
@@ -157,9 +251,14 @@ const styles = StyleSheet.create({
   },
   textoFiltro: { color: '#365563', fontSize: 12 },
   trianguloFlecha: {
-    width: 0, height: 0,
-    borderLeftWidth: 5, borderRightWidth: 5, borderTopWidth: 8,
-    borderLeftColor: 'transparent', borderRightColor: 'transparent', borderTopColor: '#365563',
+    width: 0,
+    height: 0,
+    borderLeftWidth: 5,
+    borderRightWidth: 5,
+    borderTopWidth: 8,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: '#365563',
   },
   botonAgregar: {
     backgroundColor: '#C8DFEA',
@@ -173,22 +272,82 @@ const styles = StyleSheet.create({
   textoAgregar: { color: '#365563', fontSize: 12 },
 
   contenedorLista: {
-    backgroundColor: '#FFF',
-    borderRadius: 15,
-    padding: 15,
+    paddingHorizontal: 15,
+    paddingBottom: 20,
   },
-  tarjetaFila: { backgroundColor: '#C8DFEA', borderRadius: 8, overflow: 'hidden', marginBottom: 15, borderWidth: 2, borderColor: '#FFF' },
-  fila: { flexDirection: 'row', borderBottomWidth: 3, borderBottomColor: '#FFF' },
-  colEtiqueta: { width: '30%', backgroundColor: '#365563', padding: 10, justifyContent: 'center' },
-  textoEtiqueta: { color: '#FFF', fontSize: 12, fontFamily: "Ultra" },
-  colValor: { width: '70%', padding: 10, justifyContent: 'center' },
-  textoValor: { color: '#365563', fontSize: 12 },
+  tarjetaFila: { 
+    backgroundColor: '#C8DFEA', 
+    borderRadius: 8, 
+    overflow: 'hidden', 
+    marginBottom: 15, 
+    borderWidth: 2, 
+    borderColor: '#FFF' 
+  },
+  fila: { 
+    flexDirection: 'row', 
+    borderBottomWidth: 3, 
+    borderBottomColor: '#FFF' 
+  },
+  colEtiqueta: { 
+    width: '30%', 
+    backgroundColor: '#365563', 
+    padding: 10, 
+    justifyContent: 'center' 
+  },
+  textoEtiqueta: { 
+    color: '#FFF', 
+    fontSize: 12, 
+    fontFamily: "Ultra" 
+  },
+  colValor: { 
+    width: '70%', 
+    padding: 10, 
+    justifyContent: 'center' 
+  },
+  textoValor: { 
+    color: '#365563', 
+    fontSize: 12 
+  },
 
-  // Estilos de Acciones
-  filaAcciones: { flexDirection: 'row' },
-  colEtiquetaAccion: { width: '30%', backgroundColor: '#365563', padding: 10, justifyContent: 'center' },
-  colValorAccion: { width: '70%', padding: 10, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
-  botonEditar: { backgroundColor: '#FFF', paddingVertical: 5, paddingHorizontal: 15, borderRadius: 15 },
-  botonBorrar: { backgroundColor: '#FF0000', paddingVertical: 5, paddingHorizontal: 15, borderRadius: 15 },
-  textoBotonAccion: { fontSize: 11, fontWeight: 'bold', color: '#000' }, // Para borrar puedes cambiar color si gustas
+  filaAcciones: { 
+    flexDirection: 'row' 
+  },
+  colEtiquetaAccion: { 
+    width: '30%', 
+    backgroundColor: '#365563', 
+    padding: 10, 
+    justifyContent: 'center' 
+  },
+  colValorAccion: { 
+    width: '70%', 
+    padding: 10, 
+    flexDirection: 'row', 
+    justifyContent: 'space-around', 
+    alignItems: 'center' 
+  },
+  botonEditar: { 
+    backgroundColor: '#FFF', 
+    paddingVertical: 5, 
+    paddingHorizontal: 15, 
+    borderRadius: 15 
+  },
+  botonBorrar: { 
+    backgroundColor: '#FF0000', 
+    paddingVertical: 5, 
+    paddingHorizontal: 15, 
+    borderRadius: 15 
+  },
+  textoBotonAccion: { 
+    fontSize: 11, 
+    fontWeight: 'bold', 
+    color: '#000' 
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    padding: 40,
+  },
+  emptyText: {
+    color: '#365563',
+    fontSize: 14,
+  },
 });

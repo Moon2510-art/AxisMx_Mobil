@@ -117,5 +117,63 @@ export const authService = {
   },
 };
 
+export const userService = {
+  // Obtener todos los usuarios
+  getAll: async () => {
+    try {
+      const response = await api.get('/usuarios');
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error al obtener usuarios:', error);
+      return { success: false, message: error.response?.data?.message || 'Error al cargar usuarios' };
+    }
+  },
+
+  // Obtener usuario por ID
+  getById: async (id) => {
+    try {
+      const response = await api.get(`/usuarios/${id}`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Usuario no encontrado' };
+    }
+  },
+
+  // Crear usuario
+  create: async (userData) => {
+    try {
+      const response = await api.post('/usuarios', userData);
+      return { success: true, data: response.data, message: 'Usuario creado exitosamente' };
+    } catch (error) {
+      console.error('Error al crear usuario:', error);
+      if (error.response?.data?.errors) {
+        const errors = Object.values(error.response.data.errors).flat();
+        return { success: false, message: errors.join(', ') };
+      }
+      return { success: false, message: error.response?.data?.message || 'Error al crear usuario' };
+    }
+  },
+
+  // Actualizar usuario
+  update: async (id, userData) => {
+    try {
+      const response = await api.put(`/usuarios/${id}`, userData);
+      return { success: true, data: response.data, message: 'Usuario actualizado exitosamente' };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Error al actualizar usuario' };
+    }
+  },
+
+  // Eliminar usuario
+  delete: async (id) => {
+    try {
+      const response = await api.delete(`/usuarios/${id}`);
+      return { success: true, message: 'Usuario eliminado exitosamente' };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Error al eliminar usuario' };
+    }
+  },
+};
+
 export default api; // <--- Esto exporta api por defecto
 // authService ya está exportado arriba como export const
