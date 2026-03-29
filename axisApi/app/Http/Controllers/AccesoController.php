@@ -11,16 +11,97 @@ use Illuminate\Support\Facades\Log;
 class AccesoController extends Controller
 {
     public function verificarCredencial(Request $request)
-    {
-        // Lógica para verificar credencial
-        // ...
+{
+    $credencial = Credencial::with('usuario')
+        ->where('Codigo_Credencial', $request->codigo_credencial)
+        ->first();
+
+    if (!$credencial) {
+        return response()->json([
+            'success' => false,
+            'acceso_autorizado' => false,
+            'mensaje' => 'Credencial no encontrada'
+        ]);
+    }
+
+    $usuario = $credencial->usuario;
+
+    if ($usuario->ID_Estado != 1) {
+        return response()->json([
+            'success' => true,
+            'acceso_autorizado' => false,
+            'mensaje' => 'Usuario inactivo'
+        ]);
+    }
+
+    return response()->json([
+        'success' => true,
+        'acceso_autorizado' => true,
+        'mensaje' => 'Acceso autorizado',
+        'usuario' => $usuario
+    ]);
+
     }
 
     public function verificarPlaca(Request $request)
-    {
-        // Lógica para verificar placa
-        // ...
+{
+    $imageBase64 = $request->input('image');
+
+    if (!$imageBase64) {
+        return response()->json([
+            'success' => false,
+            'acceso_autorizado' => false,
+            'mensaje' => 'Imagen no recibida'
+        ]);
     }
+
+    try {
+        // Limpiar base64
+        $imageBase64 = str_replace('data:image/jpeg;base64,', '', $imageBase64);
+        $image = base64_decode($imageBase64);
+
+        $filePath = storage_path('app/placa.jpg');
+        file_put_contents($filePath, $image);
+
+        // 🔥 OCR REAL (rápido usando Tesseract)
+        $output = shell_exec("tesseract $filePath stdout 2>/dev/null");
+
+        $placa = strtoupper(preg_replace('/[^A-Z0-9]/', '', $output));
+
+        if (!$placa) {
+            return response()->json([
+                'success' => true,
+                'acceso_autorizado' => false,
+                'mensaje' => 'No se pudo detectar la placa'
+            ]);
+        }
+
+        $vehiculo = Vehiculo::where('Placa', $placa)->first();
+
+        if (!$vehiculo) {
+            return response()->json([
+                'success' => true,
+                'acceso_autorizado' => false,
+                'mensaje' => "Placa $placa no registrada"
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'acceso_autorizado' => true,
+            'mensaje' => "Acceso autorizado: $placa",
+            'placa' => $placa,
+            'vehiculo' => $vehiculo
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'acceso_autorizado' => false,
+            'mensaje' => 'Error procesando imagen'
+        ]);
+    }
+}
 
     public function historial(Request $request)
     {
@@ -59,6 +140,17 @@ class AccesoController extends Controller
             ], 500);
         }
     }
+
+    private function simularOCR()
+{
+    $letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    return 
+        $letras[rand(0,25)] .
+        $letras[rand(0,25)] .
+        $letras[rand(0,25)] .
+        '-' .
+        rand(100,999);
+}
 
     public function recent(Request $request)
     {

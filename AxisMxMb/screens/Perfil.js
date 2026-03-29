@@ -62,6 +62,7 @@ export default function PerfilScreen({ navigation }) {
       description: 'Gestionar visitantes'
     },
   ];
+  
 
   const nombreCompleto = user ? `${user.nombre} ${user.apellido_paterno || ''}` : 'Usuario';
   const email = user?.email || '';
@@ -99,7 +100,11 @@ export default function PerfilScreen({ navigation }) {
 
       <View style={styles.settingsContainer}>
         <Text style={styles.menuTitle}>Configuración</Text>
-        <TouchableOpacity style={styles.menuItem}>
+        // En PerfilScreen.js buscar el botón de notificaciones:
+        <TouchableOpacity 
+          style={styles.menuItem} 
+          onPress={() => navigation.navigate('Notificaciones')} // <--- Añadir esta línea
+        >
           <Icon name="notifications-outline" size={24} color="#114B5F" />
           <View style={styles.menuItemContent}>
             <Text style={styles.menuItemText}>Notificaciones</Text>
@@ -107,14 +112,17 @@ export default function PerfilScreen({ navigation }) {
           </View>
           <Icon name="chevron-forward-outline" size={20} color="#999" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
-          <Icon name="lock-closed-outline" size={24} color="#114B5F" />
-          <View style={styles.menuItemContent}>
-            <Text style={styles.menuItemText}>Cambiar contraseña</Text>
-            <Text style={styles.menuItemDescription}>Actualizar tu contraseña</Text>
-          </View>
-          <Icon name="chevron-forward-outline" size={20} color="#999" />
-        </TouchableOpacity>
+        <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => navigation.navigate('CambiarPassword')} // <--- Añadir esto
+          >
+            <Icon name="lock-closed-outline" size={24} color="#114B5F" />
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuItemText}>Cambiar contraseña</Text>
+              <Text style={styles.menuItemDescription}>Actualizar tu contraseña</Text>
+            </View>
+            <Icon name="chevron-forward-outline" size={20} color="#999" />
+          </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -228,4 +236,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
   },
+  
 });

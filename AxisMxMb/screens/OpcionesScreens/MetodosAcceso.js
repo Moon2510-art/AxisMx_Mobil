@@ -1,200 +1,198 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
+import { useFocusEffect } from '@react-navigation/native';
+import { tipoAccesoService } from '../../services/api';
 
 export default function MetodosAcceso() {
   const [fontsLoaded] = useFonts({
     Ultra: require("../../assets/fonts/DelaGothicOne-Regular.ttf"),
   });
 
+  const [tiposAcceso, setTiposAcceso] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const cargarTiposAcceso = async () => {
+    const result = await tipoAccesoService.getAll();
+    if (result.success) {
+      setTiposAcceso(result.data);
+    } else {
+      Alert.alert('Error', result.message);
+    }
+    setLoading(false);
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await cargarTiposAcceso();
+    setRefreshing(false);
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      cargarTiposAcceso();
+    }, [])
+  );
+
   if (!fontsLoaded) return null;
+
+  if (loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#114B5F" />
+        <Text style={styles.loadingText}>Cargando métodos...</Text>
+      </View>
+    );
+  }
+
+  const getIcon = (nombre) => {
+    const iconMap = {
+      'Peatonal': '🚶',
+      'Vehicular': '🚗',
+      'Autobús': '🚌',
+    };
+    return iconMap[nombre] || '🚪';
+  };
 
   return (
     <SafeAreaView style={styles.contenedor}>
-      <ScrollView contentContainerStyle={styles.areaScroll} showsVerticalScrollIndicator={false}>
-        
-        {/* 1. Encabezado */}
-        <View style={styles.encabezadoBlanco}>
-          <Text style={styles.textoTitulo}>Métodos{"\n"}Acceso</Text>
-          <TouchableOpacity style={styles.badgePerfil}>
-             <View style={styles.iconoPerfil} />
-             <Text style={styles.nombrePerfil}>Cristobal</Text>
-          </TouchableOpacity>
+      {/* HEADER AL ESTILO USUARIOS */}
+      <View style={styles.encabezadoBlanco}>
+        <View>
+          <Text style={styles.textoTitulo}>Accesos</Text>
+          <Text style={styles.subtituloTexto}>Tipos permitidos</Text>
         </View>
+        <View style={styles.iconoHeaderContainer}>
+            <Text style={{fontSize: 24}}>🛡️</Text>
+        </View>
+      </View>
 
-        {/* 2. Filtros y Búsqueda */}
-        <View style={styles.contenedorFiltros}>
-          <TextInput 
-            style={styles.inputBusqueda} 
-            placeholder="Buscar usuario o tag" 
-            placeholderTextColor="#365563"
-          />
-          
-          <View style={styles.filaFiltros}>
-            <TouchableOpacity style={styles.selectorFiltro}>
-              <Text style={styles.textoFiltro}>Estatus</Text>
-              <View style={styles.trianguloFlecha} />
-            </TouchableOpacity>
+      <FlatList
+        data={tiposAcceso}
+        keyExtractor={(item) => item.ID_Tipo_Acceso.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.tarjeta}>
+            <View style={[styles.decoracionLateral, { backgroundColor: item.Nombre_Tipo === 'Peatonal' ? '#4CAF50' : '#114B5F' }]} />
+            
+            <View style={styles.contenedorIcono}>
+              <Text style={styles.emojiIcono}>{getIcon(item.Nombre_Tipo)}</Text>
+            </View>
 
-            <TouchableOpacity style={styles.botonAgregar}>
-              <Text style={styles.textoAgregar}>+ Agregar</Text>
-            </TouchableOpacity>
+            <View style={styles.infoCuerpo}>
+              <View style={styles.filaTitulo}>
+                <Text style={styles.nombreMetodo}>{item.Nombre_Tipo}</Text>
+                <View style={styles.badgeId}>
+                  <Text style={styles.textoBadge}>ID: {item.ID_Tipo_Acceso}</Text>
+                </View>
+              </View>
+              
+              <Text style={styles.descripcionMetodo} numberOfLines={2}>
+                {item.Descripcion || 'Sin descripción detallada en el sistema.'}
+              </Text>
+            </View>
           </View>
-        </View>
-
-        {/* 3. Lista de Métodos */}
-        <View style={styles.contenedorLista}>
-          <TarjetaMetodo 
-            datos={{
-              id: "8",
-              usuario: "Cervantes Santana Cristobal Eduardo",
-              tag: "A-00125",
-              descripcion: "Targeta Principal",
-              estado: "Activo"
-            }} 
-          />
-          <TarjetaMetodo 
-            datos={{
-              id: "9",
-              usuario: "Hernandez Maldonado Aldo Uriel",
-              tag: "Q-00205",
-              descripcion: "Acceso laboratorio",
-              estado: "Inactivo"
-            }} 
-          />
-          <TarjetaMetodo 
-            datos={{
-              id: "10",
-              usuario: "Jimenez Perez Valentina",
-              tag: "ABC-123",
-              descripcion: "Acceso vehicular",
-              estado: "Activo"
-            }} 
-          />
-        </View>
-
-      </ScrollView>
+        )}
+        contentContainerStyle={styles.listaEspaciado}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#114B5F']} />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No hay métodos configurados</Text>
+          </View>
+        }
+      />
     </SafeAreaView>
   );
 }
 
-const TarjetaMetodo = ({ datos }) => (
-  <View style={styles.tarjetaFila}>
-    <Fila label="ID" value={datos.id} />
-    <Fila label="Usuario" value={datos.usuario} />
-    <Fila label="Tag" value={datos.tag} />
-    <Fila label="Descripcion" value={datos.descripcion} />
-    <Fila label="Estado" value={datos.estado} />
-    
-    <View style={styles.filaAcciones}>
-      <View style={styles.colEtiquetaAccion}>
-        <Text style={styles.textoEtiqueta}>Acciones</Text>
-      </View>
-      <View style={styles.colValorAccion}>
-        <TouchableOpacity style={styles.botonEditar}>
-          <Text style={styles.textoBotonAccion}>Editar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.botonBorrar}>
-          <Text style={[styles.textoBotonAccion]}>Borrar</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  </View>
-);
-
-const Fila = ({ label, value }) => (
-  <View style={styles.fila}>
-    <View style={styles.colEtiqueta}><Text style={styles.textoEtiqueta}>{label}</Text></View>
-    <View style={styles.colValor}><Text style={styles.textoValor}>{value}</Text></View>
-  </View>
-);
-
 const styles = StyleSheet.create({
   contenedor: { flex: 1, backgroundColor: '#C8DFEA' },
-  areaScroll: { paddingHorizontal: 15, paddingTop: 15, paddingBottom: 110 },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingText: { marginTop: 10, color: '#365563', fontSize: 14 },
   
   encabezadoBlanco: {
     backgroundColor: '#FFF',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 18,
-    borderRadius: 15,
-    marginBottom: 15,
+    padding: 20,
+    borderRadius: 20,
+    marginHorizontal: 15,
+    marginTop: 15,
+    marginBottom: 10,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  textoTitulo: { fontSize: 28, color: '#365563', fontFamily: "Ultra", lineHeight: 32 },
-  badgePerfil: { flexDirection: 'row', alignItems: 'center', padding: 8, borderRadius: 12, borderWidth: 1, borderColor: '#365563' },
-  iconoPerfil: { width: 20, height: 20, borderRadius: 10, borderWidth: 1.5, borderColor: '#365563', marginRight: 6 },
-  nombrePerfil: { color: '#365563', fontSize: 14 },
+  textoTitulo: { fontSize: 28, color: '#365563', fontFamily: "Ultra" },
+  subtituloTexto: { fontSize: 14, color: '#777', marginTop: -5 },
+  iconoHeaderContainer: { backgroundColor: '#C8DFEA', padding: 10, borderRadius: 15 },
 
-  contenedorFiltros: {
+  listaEspaciado: { paddingHorizontal: 15, paddingBottom: 30, paddingTop: 10 },
+  
+  tarjeta: {
     backgroundColor: '#FFF',
     borderRadius: 15,
-    padding: 15,
     marginBottom: 15,
-  },
-  inputBusqueda: {
-    backgroundColor: '#C8DFEA',
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    color: '#365563',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#365563',
-  },
-  filaFiltros: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  selectorFiltro: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#C8DFEA',
-    paddingHorizontal: 12,
-    height: 40,
-    borderRadius: 8,
-    width: '45%',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: '#365563',
+    padding: 15,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
   },
-  textoFiltro: { color: '#365563', fontSize: 12 },
-  trianguloFlecha: {
-    width: 0, height: 0,
-    borderLeftWidth: 5, borderRightWidth: 5, borderTopWidth: 8,
-    borderLeftColor: 'transparent', borderRightColor: 'transparent', borderTopColor: '#365563',
+  decoracionLateral: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 6,
   },
-  botonAgregar: {
-    backgroundColor: '#C8DFEA',
-    paddingHorizontal: 15,
-    height: 40,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#365563',
+  contenedorIcono: {
+    width: 55,
+    height: 55,
+    borderRadius: 15,
+    backgroundColor: '#F0F7FA',
     justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
   },
-  textoAgregar: { color: '#365563', fontSize: 12 },
-
-  contenedorLista: {
-    backgroundColor: '#FFF',
-    borderRadius: 15,
-    padding: 15,
+  emojiIcono: { fontSize: 26 },
+  infoCuerpo: { flex: 1 },
+  filaTitulo: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center',
+    marginBottom: 4 
   },
-  tarjetaFila: { backgroundColor: '#C8DFEA', borderRadius: 8, overflow: 'hidden', marginBottom: 15, borderWidth: 2, borderColor: '#FFF' },
-  fila: { flexDirection: 'row', borderBottomWidth: 3, borderBottomColor: '#FFF' },
-  colEtiqueta: { width: '32%', backgroundColor: '#365563', padding: 10, justifyContent: 'center' },
-  textoEtiqueta: { color: '#FFF', fontSize: 11, fontFamily: "Ultra" },
-  colValor: { width: '68%', padding: 10, justifyContent: 'center' },
-  textoValor: { color: '#365563', fontSize: 12 },
+  nombreMetodo: { fontSize: 18, fontWeight: 'bold', color: '#114B5F' },
+  badgeId: { 
+    backgroundColor: '#E1E8EB', 
+    paddingHorizontal: 8, 
+    paddingVertical: 2, 
+    borderRadius: 6 
+  },
+  textoBadge: { fontSize: 10, color: '#365563', fontWeight: '700' },
+  descripcionMetodo: { fontSize: 13, color: '#666', lineHeight: 18 },
 
-  filaAcciones: { flexDirection: 'row' },
-  colEtiquetaAccion: { width: '32%', backgroundColor: '#365563', padding: 10, justifyContent: 'center' },
-  colValorAccion: { width: '68%', padding: 10, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
-  botonEditar: { backgroundColor: '#FFF', paddingVertical: 5, paddingHorizontal: 15, borderRadius: 15 },
-  botonBorrar: { backgroundColor: '#FF0000', paddingVertical: 5, paddingHorizontal: 15, borderRadius: 15 },
-  textoBotonAccion: { fontSize: 11, color: '#000' },
-
+  emptyContainer: { alignItems: 'center', marginTop: 50 },
+  emptyText: { color: '#365563', fontSize: 15, opacity: 0.6 },
 });

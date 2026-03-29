@@ -1,77 +1,47 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native'
-import React, { useState, useEffect, useCallback } from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Dimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
+import { dashboardService } from '../services/api';
+
+const { width } = Dimensions.get('window');
 
 export default function Dashboard({ navigation }) {
   const [fontsLoaded] = useFonts({
     Ultra: require("../assets/fonts/DelaGothicOne-Regular.ttf"),
   });
 
-  const { user, logout, userRole } = useAuth();
+  const { user, userRole } = useAuth();
   const [stats, setStats] = useState({
-    accesosVehiculares: 0,
-    accesosPeatonales: 0,
-    totalAccesos: 0,
-    zonaMasTrafico: 'Cargando...'
+    total_accesos_hoy: 0,
+    accesos_autorizados_hoy: 0,
+    accesos_denegados_hoy: 0,
+    usuarios_activos: 0,
+    vehiculos_registrados: 0,
   });
-  const [accesosRecientes, setAccesosRecientes] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Cargar datos al iniciar
-  useEffect(() => {
-    cargarDatos();
-  }, []);
-
-  const cargarDatos = async () => {
-    try {
-      // Obtener estadísticas de accesos
-      const response = await api.get('/access/stats');
-      if (response.data.success) {
-        setStats(response.data.data);
-      }
-
-      // Obtener accesos recientes
-      const accesosResponse = await api.get('/access/recent?limit=5');
-      if (accesosResponse.data.success) {
-        setAccesosRecientes(accesosResponse.data.data);
-      }
-    } catch (error) {
-      console.error('Error cargando datos:', error);
-      Alert.alert('Error', 'No se pudieron cargar los datos');
+  const cargarEstadisticas = async () => {
+    const result = await dashboardService.getStats();
+    if (result.success) {
+      setStats(result.data);
     }
   };
 
-  const onRefresh = useCallback(async () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    await cargarDatos();
+    await cargarEstadisticas();
     setRefreshing(false);
-  }, []);
-
-  const handleLogout = async () => {
-    Alert.alert(
-      'Cerrar sesión',
-      '¿Estás seguro de que quieres cerrar sesión?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { 
-          text: 'Cerrar sesión', 
-          style: 'destructive',
-          onPress: async () => {
-            await logout();
-            // El AuthContext manejará la navegación
-          }
-        }
-      ]
-    );
   };
+
+  useEffect(() => {
+    cargarEstadisticas();
+  }, []);
 
   if (!fontsLoaded) return null;
 
-  // Obtener nombre completo del usuario
-  const nombreCompleto = user ? `${user.nombre} ${user.apellido_paterno || ''}` : 'Usuario';
+  const nombreUsuario = user ? user.nombre : 'Usuario';
 
   return (
     <SafeAreaView style={styles.contenedor}>
@@ -79,156 +49,197 @@ export default function Dashboard({ navigation }) {
         contentContainerStyle={styles.areaScroll} 
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#365563']} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#114B5F']} />
         }
       >
-        {/* 1. Encabezado con Recuadro Blanco */}
-        <View style={styles.encabezadoBlanco}>
-          <Text style={styles.textoTitulo}>AxisMx</Text>
-          <TouchableOpacity style={styles.badgePerfil} onPress={() => navigation.navigate('Perfil')}>
-            <View style={styles.iconoPerfil} />
-            <Text style={styles.nombrePerfil}>{nombreCompleto.split(' ')[0]}</Text>
+        {/* Encabezado Estilizado */}
+        <View style={styles.headerContainer}>
+          <View>
+            <Text style={styles.saludoMini}>Bienvenido de vuelta,</Text>
+            <Text style={styles.nombreUltra}>{nombreUsuario}</Text>
+            <View style={styles.rolBadge}>
+              <Text style={styles.rolTexto}>{userRole?.toUpperCase() || 'USUARIO'}</Text>
+            </View>
+          </View>
+          <TouchableOpacity 
+            style={styles.perfilCircle} 
+            onPress={() => navigation.navigate('Perfil')}
+          >
+            <Text style={{fontSize: 24}}>👤</Text>
           </TouchableOpacity>
         </View>
 
+        {/* Panel de Control de Accesos */}
+        <Text style={styles.seccionTitulo}>Estado de Accesos (Hoy)</Text>
+        <View style={styles.gridAccesos}>
+          <View style={[styles.cardAcceso, { width: '100%', marginBottom: 12, backgroundColor: '#114B5F' }]}>
+            <Text style={[styles.numeroGrande, { color: '#FFF' }]}>{stats.total_accesos_hoy}</Text>
+            <Text style={[styles.labelAcceso, { color: '#C8DFEA' }]}>Total de Movimientos</Text>
+          </View>
+          
+          <View style={[styles.cardAcceso, { width: '48%', borderColor: '#4CAF50', borderWidth: 1 }]}>
+            <Text style={[styles.numeroMedio, { color: '#4CAF50' }]}>{stats.accesos_autorizados_hoy}</Text>
+            <Text style={styles.labelAcceso}>Autorizados</Text>
+          </View>
 
-        {/* 2. Cuadrícula de Estadísticas */}
-        <View style={styles.cuadricula}>
-          <View style={styles.cajaStat}>
-            <Text style={styles.etiquetaStat}>Accesos vehiculares esta semana</Text>
-            <Text style={styles.valorStat}>{stats.accesosVehiculares}</Text>
-          </View>
-          <View style={styles.cajaStat}>
-            <Text style={styles.etiquetaStat}>Accesos peatonales esta semana</Text>
-            <Text style={styles.valorStat}>{stats.accesosPeatonales}</Text>
-          </View>
-          <View style={styles.cajaStat}>
-            <Text style={styles.etiquetaStat}>Total de accesos semanales </Text>
-            <Text style={styles.valorStat}>{stats.totalAccesos}</Text>
-          </View>
-          <View style={styles.cajaStat}>
-            <Text style={styles.etiquetaStat}>Acceso con más tráfico</Text>
-            <Text style={[styles.valorStat, { fontSize: 16 }]}>{stats.zonaMasTrafico}</Text>
+          <View style={[styles.cardAcceso, { width: '48%', borderColor: '#F44336', borderWidth: 1 }]}>
+            <Text style={[styles.numeroMedio, { color: '#F44336' }]}>{stats.accesos_denegados_hoy}</Text>
+            <Text style={styles.labelAcceso}>Denegados</Text>
           </View>
         </View>
 
-        {/* 3. CONTENEDOR DE ACCESOS RECIENTES */}
-        <View style={styles.contenedorAccesos}>
-          <Text style={styles.tituloSeccion}>Accesos Recientes</Text>
+        {/* Resumen General del Sistema */}
+        <Text style={styles.seccionTitulo}>Resumen General</Text>
+        <View style={styles.resumenContainer}>
+          <View style={styles.resumenRow}>
+            <View style={styles.resumenIconBox}>
+              <Text style={{fontSize: 20}}>👥</Text>
+            </View>
+            <View style={{flex: 1}}>
+              <Text style={styles.resumenLabel}>Usuarios Activos</Text>
+              <Text style={styles.resumenSub}>Personal con acceso vigente</Text>
+            </View>
+            <Text style={styles.resumenValue}>{stats.usuarios_activos}</Text>
+          </View>
 
-          {accesosRecientes.length === 0 ? (
-            <Text style={styles.sinDatos}>No hay accesos recientes</Text>
-          ) : (
-            accesosRecientes.map((acceso, index) => (
-              <TarjetaAcceso 
-                key={index}
-                datos={{
-                  fecha: new Date(acceso.Fecha_Hora).toLocaleString(),
-                  usuario: acceso.usuario?.nombre || 'Desconocido',
-                  zona: acceso.zona || 'N/A',
-                  credencial: acceso.Codigo_Credencial || acceso.Placa || 'N/A',
-                  tipo: acceso.tipoAcceso?.Nombre_Tipo || 'N/A',
-                  estado: acceso.Acceso_Autorizado ? 'Autorizado' : 'Denegado'
-                }} 
-              />
-            ))
-          )}
+          <View style={[styles.resumenRow, { borderBottomWidth: 0 }]}>
+            <View style={[styles.resumenIconBox, { backgroundColor: '#FFF3E0' }]}>
+              <Text style={{fontSize: 20}}>🚗</Text>
+            </View>
+            <View style={{flex: 1}}>
+              <Text style={styles.resumenLabel}>Vehículos</Text>
+              <Text style={styles.resumenSub}>Unidades registradas</Text>
+            </View>
+            <Text style={[styles.resumenValue, { color: '#FF9800' }]}>{stats.vehiculos_registrados}</Text>
+          </View>
         </View>
 
-        {/* Mostrar rol del usuario (solo para debug) */}
-        <Text style={styles.rolText}>Rol: {userRole}</Text>
+        {/* Última Actividad */}
+        <View style={styles.recientesHeader}>
+          <Text style={styles.seccionTitulo}>Última Actividad</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Reportes')}>
+            <Text style={styles.verTodo}>Ver reporte</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.cardReciente}>
+          <View style={styles.placeholderContainer}>
+            <Text style={{fontSize: 30, marginBottom: 10}}>📊</Text>
+            <Text style={styles.placeholderText}>Sincronizando logs en tiempo real...</Text>
+          </View>
+        </View>
 
       </ScrollView>
     </SafeAreaView>
-  )
-}
-
-const TarjetaAcceso = ({ datos }) => (
-  <View style={styles.tarjetaFila}>
-    <Fila label="Fecha y Hora" value={datos.fecha} />
-    <Fila label="Usuario" value={datos.usuario} />
-    <Fila label="Zona" value={datos.zona} />
-    <Fila label="Credencial" value={datos.credencial} />
-    <Fila label="Tipo" value={datos.tipo} />
-    <Fila label="Estado" value={datos.estado} esUltimo estado={datos.estado} />
-  </View>
-);
-
-const Fila = ({ label, value, esUltimo, estado }) => {
-  const getEstadoColor = () => {
-    if (estado === 'Autorizado') return '#4CAF50';
-    if (estado === 'Denegado') return '#f44336';
-    return '#365563';
-  };
-
-  return (
-    <View style={[styles.fila, esUltimo && { borderBottomWidth: 0 }]}>
-      <View style={styles.colEtiqueta}><Text style={styles.textoEtiqueta}>{label}</Text></View>
-      <View style={styles.colValor}>
-        {estado ? (
-          <Text style={[styles.textoValor, { color: getEstadoColor(), fontWeight: 'bold' }]}>{value}</Text>
-        ) : (
-          <Text style={styles.textoValor}>{value}</Text>
-        )}
-      </View>
-    </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   contenedor: { flex: 1, backgroundColor: '#C8DFEA' },
-  areaScroll: { paddingHorizontal: 15, paddingTop: 15, paddingBottom: 110 },
+  areaScroll: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 40 },
   
-  // Encabezado
-  encabezadoBlanco: {
-    backgroundColor: '#FFF',
+  // Header
+  headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 18,
-    borderRadius: 15,
-    marginBottom: 15,
+    marginBottom: 25,
+    marginTop: 10
   },
-  textoTitulo: { fontSize: 25, color: '#365563', fontFamily: "Ultra" },
-  badgePerfil: { flexDirection: 'row', alignItems: 'center', padding: 8, borderRadius: 12, borderWidth: 1, borderColor: '#355563' },
-  iconoPerfil: { width: 20, height: 20, borderRadius: 10, borderWidth: 1.5, borderColor: '#365563', marginRight: 6 },
-  nombrePerfil: { color: '#365563', fontSize: 14 },
-
-  logoutButton: {
-    backgroundColor: '#f44336',
-    padding: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  logoutText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-
-  // Stats
-  cuadricula: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 5 },
-  cajaStat: { width: '48%', backgroundColor: '#FFF', padding: 12, borderRadius: 12, marginBottom: 15, height: 100, justifyContent: 'space-between' },
-  etiquetaStat: { fontSize: 11, color: '#608da2', fontFamily: "Ultra" },
-  valorStat: { fontSize: 20, color: '#365563', fontFamily: "Ultra" },
-
-  // CONTENEDOR BLANCO DE ACCESOS RECIENTES
-  contenedorAccesos: {
+  saludoMini: { fontSize: 14, color: '#365563', marginBottom: -2 },
+  nombreUltra: { fontSize: 24, color: '#114B5F', fontFamily: "Ultra" },
+  rolBadge: {
     backgroundColor: '#FFF',
-    borderRadius: 15,
-    padding: 15,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    elevation: 2,
+  },
+  rolTexto: { fontSize: 10, color: '#114B5F', fontWeight: '900' },
+  perfilCircle: { 
+    width: 60, 
+    height: 60, 
+    borderRadius: 30, 
+    backgroundColor: '#FFF', 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#114B5F',
+    shadowOpacity: 0.2,
+    shadowRadius: 10
+  },
+
+  seccionTitulo: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#365563',
+    marginBottom: 15,
     marginTop: 5,
   },
-  tituloSeccion: { fontSize: 20, color: '#365563', marginBottom: 15, fontFamily: "Ultra" },
-  
-  // Tablas internas
-  tarjetaFila: { backgroundColor: '#C8DFEA', borderRadius: 8, overflow: 'hidden', marginBottom: 15, borderWidth: 2, borderColor: '#FFF' },
-  fila: { flexDirection: 'row', borderBottomWidth: 3, borderBottomColor: '#FFF' },
-  colEtiqueta: { width: '38%', backgroundColor: '#365563', padding: 10, justifyContent: 'center' },
-  textoEtiqueta: { color: '#FFF', fontSize: 12, fontFamily: "Ultra" },
-  colValor: { width: '62%', padding: 10, justifyContent: 'center' },
-  textoValor: { color: '#365563', fontSize: 12 },
-  sinDatos: { textAlign: 'center', color: '#999', padding: 20 },
-  rolText: { textAlign: 'center', color: '#365563', marginTop: 10, fontSize: 12 },
+
+  // Grid de Accesos
+  gridAccesos: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 25,
+  },
+  cardAcceso: {
+    backgroundColor: '#FFF',
+    borderRadius: 20,
+    padding: 20,
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+  },
+  numeroGrande: { fontSize: 42, fontWeight: 'bold' },
+  numeroMedio: { fontSize: 28, fontWeight: 'bold' },
+  labelAcceso: { fontSize: 12, fontWeight: '600', color: '#666', marginTop: 2 },
+
+  // Resumen
+  resumenContainer: {
+    backgroundColor: '#FFF',
+    borderRadius: 20,
+    padding: 15,
+    marginBottom: 25,
+    elevation: 3,
+  },
+  resumenRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  resumenIconBox: {
+    width: 45,
+    height: 45,
+    borderRadius: 12,
+    backgroundColor: '#E3F2FD',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  resumenLabel: { fontSize: 15, fontWeight: 'bold', color: '#114B5F' },
+  resumenSub: { fontSize: 11, color: '#999' },
+  resumenValue: { fontSize: 20, fontWeight: 'bold', color: '#114B5F' },
+
+  // Recientes
+  recientesHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  verTodo: { color: '#114B5F', fontWeight: 'bold', fontSize: 13 },
+  cardReciente: {
+    backgroundColor: '#FFF',
+    borderRadius: 20,
+    padding: 20,
+    marginTop: 10,
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    borderColor: '#ABBCC4'
+  },
+  placeholderContainer: { alignItems: 'center', paddingVertical: 20 },
+  placeholderText: { color: '#ABBCC4', fontSize: 13, fontWeight: '600' },
 });

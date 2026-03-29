@@ -5,6 +5,12 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AccesoController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\VehiculoController;
+use App\Http\Controllers\ModeloController;
+use App\Http\Controllers\MarcaController;
+use App\Http\Controllers\RolController;
+use App\Http\Controllers\TipoAccesoController;
+use App\Http\Controllers\DashboardController;
+
 
 // AUTENTICACIÓN
 Route::post('/auth/login', [AuthController::class, 'login']);
@@ -22,13 +28,30 @@ Route::get('/usuarios/{id}', [UsuarioController::class, 'show']);
 Route::post('/usuarios', [UsuarioController::class, 'store']);
 Route::put('/usuarios/{id}', [UsuarioController::class, 'update']);
 Route::delete('/usuarios/{id}', [UsuarioController::class, 'destroy']);
+Route::get('/roles', [RolController::class, 'index']);
 
 // ACCESOS
 Route::post('/verificar', [AccesoController::class, 'verificarCredencial']);
 Route::post('/verificar-placa', [AccesoController::class, 'verificarPlaca']);
 Route::get('/accesos', [AccesoController::class, 'historial']);
+Route::get('/tipos-acceso', [TipoAccesoController::class, 'index']);
 
 // VEHICULOS
 Route::post('/vehiculos', [VehiculoController::class, 'store']);
 Route::get('/vehiculos', [VehiculoController::class, 'index']);
+Route::put('/vehiculos/{id}', [VehiculoController::class, 'update']);
 Route::delete('/vehiculos/{id}', [VehiculoController::class, 'destroy']);
+Route::get('/modelos', [ModeloController::class, 'index']);
+Route::get('/marcas', [MarcaController::class, 'index']);
+
+//ROLES
+Route::get('/roles', [RolController::class, 'index']);
+Route::post('/roles', [RolController::class, 'store']);
+Route::put('/roles/{id}', [RolController::class, 'update']);
+Route::delete('/roles/{id}', [RolController::class, 'destroy']);
+
+//VISITANTES
+Route::get('/visitantes', [UsuarioController::class, 'getVisitantes']);
+
+//DASHBOARD
+Route::get('/dashboard/stats', [DashboardController::class, 'stats'])->middleware('auth:sanctum');
