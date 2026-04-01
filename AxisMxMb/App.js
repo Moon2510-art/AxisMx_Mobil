@@ -13,6 +13,7 @@ import RecuperarPassword from './screens/RecuperarPassword';
 
 // --- Pantallas principales y Gestión ---
 import Dashboard from './screens/Dashboard';
+<<<<<<< HEAD
 import ScannerScreen from './screens/ScannerScreen';
 import Perfil from './screens/Perfil';
 import CambiarPassword from './screens/OpcionesScreens/CambiarPassword';
@@ -159,6 +160,9 @@ function AppNavigator() {
 }
 
 // ============ 7. APP PRINCIPAL ============
+=======
+import Vehiculos from './screens/Vehiculos';
+>>>>>>> main
 export default function App() {
   return (
     <SafeAreaProvider>

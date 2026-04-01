@@ -69,6 +69,7 @@ export default function Dashboard({ navigation }) {
           </TouchableOpacity>
         </View>
 
+<<<<<<< HEAD
         {/* Panel de Control de Accesos */}
         <Text style={styles.seccionTitulo}>Estado de Accesos (Hoy)</Text>
         <View style={styles.gridAccesos}>
@@ -127,6 +128,44 @@ export default function Dashboard({ navigation }) {
             <Text style={{fontSize: 30, marginBottom: 10}}>📊</Text>
             <Text style={styles.placeholderText}>Sincronizando logs en tiempo real...</Text>
           </View>
+=======
+        {/* 2. Cuadrícula de Estadísticas */}
+        <View style={styles.cuadricula}>
+          <View style={styles.cajaStat}>
+            <Text style={styles.etiquetaStat}>Accesos vehicular esta semana</Text>
+            <Text style={styles.valorStat}>8</Text>
+          </View>
+          <View style={styles.cajaStat}>
+            <Text style={styles.etiquetaStat}>Acceso peatonal esta semana</Text>
+            <Text style={styles.valorStat}>14</Text>
+          </View>
+        </View>
+
+        {/* 3. CONTENEDOR DE ACCESOS RECIENTES */}
+        <View style={styles.contenedorAccesos}>
+          <Text style={styles.tituloSeccion}>Accesos Hoy</Text>
+
+          <TarjetaAcceso 
+            datos={{
+              fecha: "08/03/2023 12:45",
+              usuario: "Cervantes Santana Cristobal Eduardo",
+              zona: "Almacen",
+              credencial: "124050867",
+              tipo: "Placa",
+              estado: "Activo"
+            }} 
+          />
+          <TarjetaAcceso 
+            datos={{
+              fecha: "08/03/2023 11:30",
+              usuario: "Cervantes Santana Cristobal Eduardo",
+              zona: "Almacen",
+              credencial: "124050867",
+              tipo: "Placa",
+              estado: "Activo"
+            }} 
+          />
+>>>>>>> main
         </View>
 
       </ScrollView>
