@@ -10,6 +10,7 @@ use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\TipoAccesoController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\OCRController;
 
 
 
@@ -40,6 +41,8 @@ Route::post('/verificar-placa', [AccesoController::class, 'verificarPlaca']);
 Route::get('/accesos', [AccesoController::class, 'historial']);
 Route::get('/tipos-acceso', [TipoAccesoController::class, 'index']);
 Route::get('/usuarios/{id}/accesos', [UsuarioController::class, 'getAccesos'])->middleware('auth:sanctum');
+Route::post('/ocr-placa', [OCRController::class, 'recognizePlate']);
+Route::post('/ocr', [OCRController::class, 'recognizeText'])->middleware('auth:sanctum');
 
 // VEHICULOS
 Route::post('/vehiculos', [VehiculoController::class, 'store']);
