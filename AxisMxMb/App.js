@@ -26,7 +26,6 @@ import EditarUsuario from './screens/EditarUsuario';
 import CrearUsuario from './screens/CrearUsuario';
 
 // --- Pantallas de Usuario ---
-import Notificaciones from './screens/Notificaciones';
 import CambiarPassword from './screens/CambiarPassword';
 import DashboardUsuario from './screens/DashboardUsuario';
 import CredencialDigital from './screens/CredencialDigital';
@@ -83,8 +82,7 @@ function AdminStack() {
       <Stack.Screen name="Visitantes" component={Visitantes} options={{ title: 'Gestión de Visitantes' }} />
       <Stack.Screen name="EditarUsuario" component={EditarUsuario} options={{ title: 'Editar Usuario' }} />
       <Stack.Screen name="CrearUsuario" component={CrearUsuario} options={{ title: 'Crear Usuario' }} />
-      <Stack.Screen name="Notificaciones" component={Notificaciones} options={{ headerShown: false }} />
-      <Stack.Screen name="CambiarPassword" component={CambiarPassword} options={{ headerShown: false }} />
+      <Stack.Screen name="CambiarPassword" component={CambiarPassword} options={{ title: 'Cambiar Contraseña' }} />
     </Stack.Navigator>
   );
 }
@@ -128,7 +126,6 @@ function UserStack() {
     >
       <Stack.Screen name="UserTabs" component={UserTabs} options={{ headerShown: false }} />
       <Stack.Screen name="CambiarPassword" component={CambiarPassword} options={{ title: 'Cambiar Contraseña' }} />
-      <Stack.Screen name="Notificaciones" component={Notificaciones} options={{ headerShown: false }} />
       <Stack.Screen 
         name="AgregarVehiculo" 
         component={AgregarVehiculo} 
