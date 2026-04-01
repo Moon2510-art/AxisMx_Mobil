@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { vehicleService, marcaService, modeloService } from '../../services/api';
+import { vehicleService, marcaService, modeloService } from '../services/api';
 
 export default function EditarVehiculo({ route, navigation }) {
   const { vehiculo } = route.params;

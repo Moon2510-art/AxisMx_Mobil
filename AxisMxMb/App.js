@@ -6,36 +6,38 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-// --- Pantallas de Autenticación ---
+// --- Pantallas de Bienvenida y Autenticación ---
+import WelcomeScreen from './screens/WelcomeScreen';
 import InicioSesion from './screens/InicioSesion';
 import RegistroUsuario from './screens/RegistroUsuario';
 import RecuperarPassword from './screens/RecuperarPassword';
 
-// --- Pantallas principales y Gestión ---
+// --- Pantallas de Administración ---
 import Dashboard from './screens/Dashboard';
-<<<<<<< HEAD
 import ScannerScreen from './screens/ScannerScreen';
 import Perfil from './screens/Perfil';
-import CambiarPassword from './screens/OpcionesScreens/CambiarPassword';
-import Notificaciones from './screens/OpcionesScreens/Notificaciones';
 import Usuarios from './screens/OpcionesScreens/Usuarios';
-import Vehiculos from './screens/OpcionesScreens/Vehiculos';
+import Vehiculos from './screens/Vehiculos';
 import Roles from './screens/OpcionesScreens/Roles';
 import MetodosAcceso from './screens/OpcionesScreens/MetodosAcceso';
 import Visitantes from './screens/OpcionesScreens/Visitantes';
 import RegistrosAcceso from './screens/OpcionesScreens/RegistrosAcceso';
-import EditarUsuario from './screens/OpcionesScreens/EditarUsuario';
-import CrearUsuario from './screens/OpcionesScreens/CrearUsuario';
+import EditarUsuario from './screens/EditarUsuario';
+import CrearUsuario from './screens/CrearUsuario';
 
-// --- Pantallas para Usuarios ---
+// --- Pantallas de Usuario ---
+import Notificaciones from './screens/Notificaciones';
+import CambiarPassword from './screens/CambiarPassword';
 import DashboardUsuario from './screens/DashboardUsuario';
-import MiCredencial from './screens/MiCredencial';
+import CredencialDigital from './screens/CredencialDigital';
 import MisAccesos from './screens/MisAccesos';
+import MisVehiculos from './screens/MisVehiculos';
+import AgregarVehiculo from './screens/AgregarVehiculo';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// ============ 1. TABS PARA ADMINISTRADORES ============
+// ============ TABS PARA ADMINISTRADORES ============
 function AdminTabs() {
   return (
     <Tab.Navigator
@@ -50,7 +52,7 @@ function AdminTabs() {
         },
         tabBarActiveTintColor: '#114B5F',
         tabBarInactiveTintColor: '#888',
-        tabBarStyle: { height: 60, paddingBottom: 10 },
+        tabBarStyle: { height: 65, paddingBottom: 10 },
         headerShown: false,
       })}
     >
@@ -62,7 +64,7 @@ function AdminTabs() {
   );
 }
 
-// ============ 2. STACK PARA ADMINISTRADORES ============
+// ============ STACK PARA ADMINISTRADORES ============
 function AdminStack() {
   return (
     <Stack.Navigator
@@ -87,7 +89,7 @@ function AdminStack() {
   );
 }
 
-// ============ 3. TABS PARA USUARIOS NORMALES ============
+// ============ TABS PARA USUARIOS ============
 function UserTabs() {
   return (
     <Tab.Navigator
@@ -95,44 +97,52 @@ function UserTabs() {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
           if (route.name === 'Inicio') iconName = focused ? 'home' : 'home-outline';
-          else if (route.name === 'Credencial') iconName = focused ? 'qr-code' : 'qr-code-outline';
-          else if (route.name === 'Mis Accesos') iconName = focused ? 'time' : 'time-outline';
-          else if (route.name === 'Perfil') iconName = focused ? 'person' : 'person-outline';
+          else if (route.name === 'Credencial') iconName = focused ? 'id-card' : 'id-card-outline';
+          else if (route.name === 'Vehículos') iconName = focused ? 'car' : 'car-outline';
+          else if (route.name === 'Accesos') iconName = focused ? 'time' : 'time-outline';
           return <Icon name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#114B5F',
         tabBarInactiveTintColor: '#888',
+        tabBarStyle: { height: 65, paddingBottom: 10 },
         headerShown: false,
       })}
     >
       <Tab.Screen name="Inicio" component={DashboardUsuario} />
-      <Tab.Screen name="Credencial" component={MiCredencial} />
-      <Tab.Screen name="Mis Accesos" component={MisAccesos} />
-      <Tab.Screen name="Perfil" component={Perfil} /> 
+      <Tab.Screen name="Credencial" component={CredencialDigital} />
+      <Tab.Screen name="Vehículos" component={MisVehiculos} />
+      <Tab.Screen name="Accesos" component={MisAccesos} />
     </Tab.Navigator>
   );
 }
 
-// ============ 4. STACK PARA USUARIOS NORMALES ============
+// ============ STACK PARA USUARIOS ============
 function UserStack() {
   return (
     <Stack.Navigator
       screenOptions={{
         headerStyle: { backgroundColor: '#114B5F' },
         headerTintColor: '#fff',
+        headerBackTitle: 'Atrás',
       }}
     >
       <Stack.Screen name="UserTabs" component={UserTabs} options={{ headerShown: false }} />
+      <Stack.Screen name="CambiarPassword" component={CambiarPassword} options={{ title: 'Cambiar Contraseña' }} />
       <Stack.Screen name="Notificaciones" component={Notificaciones} options={{ headerShown: false }} />
-      <Stack.Screen name="CambiarPassword" component={CambiarPassword} options={{ headerShown: false }} />
+      <Stack.Screen 
+        name="AgregarVehiculo" 
+        component={AgregarVehiculo} 
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 }
 
-// ============ 5. STACK DE AUTENTICACIÓN (UN SOLO DUPLICADO ELIMINADO) ============
+// ============ STACK DE AUTENTICACIÓN ============
 function AuthStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="Login" component={InicioSesion} />
       <Stack.Screen name="Registro" component={RegistroUsuario} />
       <Stack.Screen name="Recuperar" component={RecuperarPassword} />
@@ -140,7 +150,7 @@ function AuthStack() {
   );
 }
 
-// ============ 6. NAVEGADOR PRINCIPAL ============
+// ============ NAVEGADOR PRINCIPAL ============
 function AppNavigator() {
   const { isAuthenticated, loading, userRole } = useAuth();
 
@@ -151,18 +161,12 @@ function AppNavigator() {
   }
 
   const adminRoles = ['Administrador', 'Seguridad'];
-  
-  if (adminRoles.includes(userRole)) {
-    return <AdminStack />;
-  }
+  const isAdmin = adminRoles.includes(userRole);
 
-  return <UserStack />;
+  return isAdmin ? <AdminStack /> : <UserStack />;
 }
 
-// ============ 7. APP PRINCIPAL ============
-=======
-import Vehiculos from './screens/Vehiculos';
->>>>>>> main
+// ============ APP PRINCIPAL ============
 export default function App() {
   return (
     <SafeAreaProvider>

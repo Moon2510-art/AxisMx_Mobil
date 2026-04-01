@@ -29,4 +29,12 @@ class RegistroAcceso extends Model
     {
         return $this->belongsTo(TipoAcceso::class, 'ID_Tipo_Acceso');
     }
+    public function credencial()
+{
+    return $this->belongsTo(Credencial::class, 'ID_Credencial');
+}
+public function vehiculo()
+{
+    return $this->belongsTo(Vehiculo::class, 'ID_Vehiculo');
+}
 }

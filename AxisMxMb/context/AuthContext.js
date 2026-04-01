@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { authService } from '../services/api'; // <--- Importación correcta
+import { authService } from '../services/api';
 
 const AuthContext = createContext({});
 
@@ -10,10 +10,38 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [userState, setUserState] = useState(null);
 
   useEffect(() => {
     loadStoredUser();
   }, []);
+
+  const processUserData = (userData) => {
+    if (!userData) return;
+
+    // 1. Extraer Rol de forma segura
+    const role = userData.rol?.nombre || userData.rol_nombre || userData.rol;
+    
+    // 2. Extraer Estado de forma segura
+    const state = userData.ID_Estado ?? userData.id_estado ?? userData.estado;
+
+    // 3. Normalizar el objeto de usuario (IMPORTANTE)
+    // Forzamos que 'id' siempre sea accesible sin importar cómo venga del backend
+    const normalizedUser = {
+      ...userData,
+      id: userData.id || userData.ID || userData.userId,
+      ID_Estado: state
+    };
+
+    console.log("--- PROCESANDO USUARIO ---");
+    console.log("ID normalizado:", normalizedUser.id);
+    console.log("Rol detectado:", role);
+    console.log("Estado detectado:", state);
+    
+    setUser(normalizedUser); // Guardamos el usuario con el ID normalizado
+    setUserRole(role);
+    setUserState(state !== undefined ? Number(state) : null);
+  };
 
   const loadStoredUser = async () => {
     try {
@@ -21,12 +49,13 @@ export const AuthProvider = ({ children }) => {
       const token = await authService.getToken();
       
       if (storedUser && token) {
-        setUser(storedUser);
-        setUserRole(storedUser.rol?.nombre || storedUser.rol);
+        processUserData(storedUser);
         setIsAuthenticated(true);
       } else {
         setIsAuthenticated(false);
         setUser(null);
+        setUserRole(null);
+        setUserState(null);
       }
     } catch (error) {
       console.error('Error loading user:', error);
@@ -36,15 +65,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-    const result = await authService.login(email, password);
-    
-    if (result.success) {
-      setUser(result.user);
-      setUserRole(result.user.rol?.nombre || result.user.rol);
-      setIsAuthenticated(true);
-      return { success: true };
+    try {
+      console.log('🔐 Iniciando login...');
+      const result = await authService.login(email, password);
+      
+      if (result.success && result.user) {
+        processUserData(result.user); // Aquí se normaliza el ID y el Estado
+        setIsAuthenticated(true);
+        return { success: true };
+      }
+      
+      return { success: false, message: result.message || 'Error de credenciales' };
+    } catch (error) {
+      console.error('Login error in Context:', error);
+      return { success: false, message: 'Error de conexión' };
     }
-    return { success: false, message: result.message };
   };
 
   const register = async (userData) => {
@@ -55,6 +90,7 @@ export const AuthProvider = ({ children }) => {
     await authService.logout();
     setUser(null);
     setUserRole(null);
+    setUserState(null);
     setIsAuthenticated(false);
   };
 
@@ -65,8 +101,9 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider
       value={{
-        user,
+        user, // Este ya tiene el .id garantizado por processUserData
         userRole,
+        userState,
         loading,
         isAuthenticated,
         isAdminOrSecurity,

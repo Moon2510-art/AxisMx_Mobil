@@ -25,6 +25,7 @@ export default function RegistroUsuario({ navigation }) {
     matricula: '',
     numero_empleado: '',
     telefono: '',
+    codigo_credencial: '',  // NUEVO CAMPO
   });
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
@@ -53,6 +54,17 @@ export default function RegistroUsuario({ navigation }) {
     // Validar que tenga matrícula o número de empleado
     if (!formData.matricula && !formData.numero_empleado) {
       Alert.alert('Error', 'Debes ingresar matrícula o número de empleado');
+      return;
+    }
+
+    // VALIDAR NÚMERO DE CREDENCIAL
+    if (!formData.codigo_credencial) {
+      Alert.alert('Error', 'El número de credencial es obligatorio');
+      return;
+    }
+
+    if (formData.codigo_credencial.length < 8) {
+      Alert.alert('Error', 'El número de credencial debe tener al menos 8 dígitos');
       return;
     }
 
@@ -119,7 +131,7 @@ export default function RegistroUsuario({ navigation }) {
         <Text style={styles.label}>Matrícula</Text>
         <TextInput
           style={styles.input}
-          placeholder="Ej. A12345678"
+          placeholder="Ej. 124048965"
           value={formData.matricula}
           onChangeText={(value) => handleChange('matricula', value)}
           autoCapitalize="characters"
@@ -141,6 +153,20 @@ export default function RegistroUsuario({ navigation }) {
           onChangeText={(value) => handleChange('telefono', value)}
           keyboardType="phone-pad"
         />
+
+        {/* NUEVO CAMPO: NÚMERO DE CREDENCIAL */}
+        <Text style={styles.label}>Número de Credencial *</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Ej. 0007194528 109,51104"
+          value={formData.codigo_credencial}
+          onChangeText={(value) => handleChange('codigo_credencial', value)}
+          keyboardType="numeric"
+          autoCapitalize="none"
+        />
+        <Text style={styles.helperText}>
+          Este número está impreso en tu tarjeta de credencial. Se usará para acceder a las instalaciones.
+        </Text>
 
         <Text style={styles.label}>Contraseña *</Text>
         <TextInput
@@ -228,6 +254,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E0E0',
     marginBottom: 5,
+  },
+  helperText: {
+    fontSize: 11,
+    color: '#666',
+    marginTop: 2,
+    marginBottom: 8,
+    marginLeft: 5,
   },
   registerButton: {
     backgroundColor: '#114B5F',

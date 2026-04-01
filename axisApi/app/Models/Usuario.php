@@ -10,11 +10,11 @@ use Laravel\Sanctum\HasApiTokens;
 class Usuario extends Model implements Authenticatable
 {
     use AuthenticatableTrait, HasApiTokens;
-
+    
     protected $table = 'Usuarios';
     protected $primaryKey = 'ID_Usuario';
     public $timestamps = false;
-
+    
     protected $fillable = [
         'Matricula',
         'Numero_Empleado',
@@ -25,51 +25,47 @@ class Usuario extends Model implements Authenticatable
         'Telefono',
         'Empresa',
         'ID_Rol',
-        'password',
+        'Contrasena',
         'ID_Estado'
     ];
-
+    
     protected $hidden = [
-        'password'
+        'Contrasena'
     ];
-
-    protected $casts = [
-        'Fecha_Creacion' => 'datetime'
-    ];
-
+    
+    // Relación con Rol
     public function rol()
     {
         return $this->belongsTo(Rol::class, 'ID_Rol');
     }
-
+    
+    // Relación con Estado
     public function estado()
     {
         return $this->belongsTo(Estado::class, 'ID_Estado');
     }
-
+    
+    // ESTE MÉTODO DEBE ESTAR SOLO UNA VEZ
     public function getAuthPassword()
     {
-        return $this->password;
+        return $this->Contrasena;
     }
-
-    // Método para autenticación con Sanctum
-    public function getAuthIdentifierName()
-    {
-        return 'ID_Usuario';
-    }
-
-    public function getAuthIdentifier()
-    {
-        return $this->getKey();
-    }
-
-    public function getAuthPasswordName()
-    {
-        return 'password';
-    }
-
+    
+    // Scope para usuarios activos
     public function scopeActivo($query)
     {
         return $query->where('ID_Estado', 1);
     }
+
+    // Relación con vehículos (uno a muchos, por ID_Usuario)
+public function vehiculos()
+{
+    return $this->hasMany(Vehiculo::class, 'ID_Usuario');
+}
+
+// Relación con credenciales
+public function credenciales()
+{
+    return $this->hasMany(Credencial::class, 'ID_Usuario');
+}
 }

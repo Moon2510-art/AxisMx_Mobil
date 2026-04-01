@@ -10,7 +10,6 @@ const api = axios.create({
   },
 });
 
-// Variable en memoria para guardar el token (solo mientras la app está abierta)
 let currentToken = null;
 let currentUser = null;
 
@@ -24,16 +23,11 @@ api.interceptors.request.use(async (config) => {
 export const authService = {
   login: async (email, password) => {
     try {
-      const response = await api.post('/auth/login', {
-        email: email,
-        password: password,
-      });
-
+      const response = await api.post('/auth/login', { email, password });
       if (response.data.success) {
-        // Guardar en memoria, NO en AsyncStorage
         currentToken = response.data.data.token;
         currentUser = response.data.data.user;
-        return { success: true, user: response.data.data.user };
+        return { success: true, user: response.data.data.user, token: currentToken };
       }
       return { success: false, message: response.data.message };
     } catch (error) {
@@ -58,7 +52,6 @@ export const authService = {
         numero_empleado: userData.numero_empleado,
         telefono: userData.telefono,
       });
-
       if (response.data.success) {
         return { success: true, message: response.data.message };
       }
@@ -76,7 +69,6 @@ export const authService = {
     }
   },
 
-  // Para administradores - obtener usuarios pendientes
   getPendingUsers: async () => {
     try {
       const response = await api.get('/auth/pending-users');
@@ -86,7 +78,6 @@ export const authService = {
     }
   },
 
-  // Para administradores - activar usuario
   activateUser: async (userId) => {
     try {
       const response = await api.put(`/auth/activate-user/${userId}`);
@@ -96,25 +87,23 @@ export const authService = {
     }
   },
 
+  changePassword: async (userId, passwordData) => {
+    try {
+      const response = await api.put(`/auth/change-password/${userId}`, passwordData);
+      return { success: true, message: response.data.message };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Error al cambiar contraseña' };
+    }
+  },
+
   logout: async () => {
-    // Limpiar variables en memoria
     currentToken = null;
     currentUser = null;
   },
 
-  getUser: async () => {
-    // Retornar usuario de memoria
-    return currentUser;
-  },
-
-  getToken: async () => {
-    // Retornar token de memoria
-    return currentToken;
-  },
-
-  isAuthenticated: () => {
-    return currentToken !== null;
-  },
+  getUser: async () => currentUser,
+  getToken: async () => currentToken,
+  isAuthenticated: () => currentToken !== null,
 };
 
 export const userService = {
@@ -138,8 +127,21 @@ export const userService = {
   },
 
   create: async (userData) => {
-    try {
-      const response = await api.post('/usuarios', userData);
+  try {
+    const response = await api.post('/usuarios', {
+      nombre: userData.nombre,
+      apellido_paterno: userData.apellido_paterno,
+      apellido_materno: userData.apellido_materno,
+      email: userData.email,
+      password: userData.password,
+      password_confirmation: userData.password_confirmation,
+      matricula: userData.matricula,
+      numero_empleado: userData.numero_empleado,
+      telefono: userData.telefono,
+      ID_Rol: userData.ID_Rol,
+      ID_Estado: userData.ID_Estado,
+      codigo_credencial: userData.codigo_credencial  // NUEVO
+    });
       return { success: true, data: response.data, message: 'Usuario creado exitosamente' };
     } catch (error) {
       console.error('Error al crear usuario:', error);
@@ -154,16 +156,10 @@ export const userService = {
   update: async (id, userData) => {
     try {
       const response = await api.put(`/usuarios/${id}`, userData);
-      if (response.data.success === false) {
-        return { success: false, message: response.data.message };
-      }
       return { success: true, data: response.data, message: 'Usuario actualizado exitosamente' };
     } catch (error) {
       console.error('Error al actualizar usuario:', error);
-      if (error.response) {
-        return { success: false, message: error.response.data.message || 'Error al actualizar usuario' };
-      }
-      return { success: false, message: 'Error de conexión con el servidor' };
+      return { success: false, message: error.response?.data?.message || 'Error al actualizar usuario' };
     }
   },
 
@@ -175,6 +171,49 @@ export const userService = {
       return { success: false, message: error.response?.data?.message || 'Error al eliminar usuario' };
     }
   },
+
+  // NUEVOS MÉTODOS PARA USUARIO
+  getCredencial: async (userId) => {
+  try {
+    const response = await api.get(`/usuarios/${userId}/credencial`);
+    console.log('URL llamada:', `/usuarios/${userId}/credencial`);
+    console.log('Respuesta completa:', response);
+    console.log('Respuesta data:', response.data);
+    if (response.data.success) {
+      return { success: true, data: response.data.data };
+    }
+    return { success: false, message: response.data.message };
+  } catch (error) {
+    console.error('Error en getCredencial:', error);
+    console.error('Error response:', error.response);
+    return { success: false, message: error.response?.data?.message || 'Error al cargar credencial' };
+  }
+},
+
+  getAccesos: async (userId) => {
+    try {
+      const response = await api.get(`/usuarios/${userId}/accesos`);
+      console.log('API accesos response:', response.data);
+      if (response.data.success !== false) {
+        return { success: true, data: response.data };
+      }
+      return { success: false, message: response.data.message };
+    } catch (error) {
+      console.error('Error en getAccesos:', error);
+      return { success: false, message: error.response?.data?.message || 'Error al cargar accesos' };
+    }
+  },
+
+  getVehiculos: async (userId) => {
+    try {
+      const response = await api.get(`/usuarios/${userId}/vehiculos`);
+      console.log('API vehiculos response:', response.data);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error en getVehiculos:', error);
+      return { success: false, message: error.response?.data?.message || 'Error al cargar vehículos' };
+    }
+  },
 };
 
 export const vehicleService = {
@@ -183,9 +222,9 @@ export const vehicleService = {
       const response = await api.get('/vehiculos');
       return { success: true, data: response.data };
     } catch (error) {
-      console.error('Error al obtener vehículos:', error);
       return { success: false, message: error.response?.data?.message || 'Error al cargar vehículos' };
     }
+    
   },
 
   getById: async (id) => {
@@ -202,11 +241,6 @@ export const vehicleService = {
       const response = await api.post('/vehiculos', vehicleData);
       return { success: true, data: response.data, message: 'Vehículo creado exitosamente' };
     } catch (error) {
-      console.error('Error al crear vehículo:', error);
-      if (error.response?.data?.errors) {
-        const errors = Object.values(error.response.data.errors).flat();
-        return { success: false, message: errors.join(', ') };
-      }
       return { success: false, message: error.response?.data?.message || 'Error al crear vehículo' };
     }
   },
@@ -221,21 +255,52 @@ export const vehicleService = {
   },
 
   delete: async (id) => {
+  try {
+    const response = await api.delete(`/vehiculos/${id}`);
+    return { success: true, message: 'Vehículo eliminado exitosamente' };
+  } catch (error) {
+    console.error('Error al eliminar vehículo:', error);
+    return { success: false, message: error.response?.data?.message || 'Error al eliminar vehículo' };
+  }
+},
+
+  getByUser: async (userId) => {
     try {
-      const response = await api.delete(`/vehiculos/${id}`);
-      return { success: true, message: 'Vehículo eliminado exitosamente' };
+      const response = await api.get(`/vehiculos/usuario/${userId}`);
+      console.log('API vehiculos usuario response:', response.data);
+      return { success: true, data: response.data };
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || 'Error al eliminar vehículo' };
+      console.error('Error al obtener vehículos del usuario:', error);
+      return { success: false, message: error.response?.data?.message || 'Error al cargar vehículos' };
     }
   },
+
+  getModelos: async () => {
+    try {
+      const response = await api.get('/modelos');
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error al obtener modelos:', error);
+      return { success: false, message: error.response?.data?.message || 'Error al cargar modelos' };
+    }
+  },
+  getMarcas: async () => {
+  try {
+    const response = await api.get('/marcas');
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error('Error al obtener marcas:', error);
+    return { success: false, message: error.response?.data?.message || 'Error al cargar marcas' };
+  }
+},
 };
+
 export const modeloService = {
   getAll: async () => {
     try {
       const response = await api.get('/modelos');
       return { success: true, data: response.data };
     } catch (error) {
-      console.error('Error al obtener modelos:', error);
       return { success: false, message: error.response?.data?.message || 'Error al cargar modelos' };
     }
   },
@@ -247,7 +312,6 @@ export const marcaService = {
       const response = await api.get('/marcas');
       return { success: true, data: response.data };
     } catch (error) {
-      console.error('Error al obtener marcas:', error);
       return { success: false, message: error.response?.data?.message || 'Error al cargar marcas' };
     }
   },
@@ -259,7 +323,6 @@ export const tipoAccesoService = {
       const response = await api.get('/tipos-acceso');
       return { success: true, data: response.data };
     } catch (error) {
-      console.error('Error al obtener tipos de acceso:', error);
       return { success: false, message: error.response?.data?.message || 'Error al cargar tipos de acceso' };
     }
   },
@@ -271,7 +334,6 @@ export const visitanteService = {
       const response = await api.get('/visitantes');
       return { success: true, data: response.data };
     } catch (error) {
-      console.error('Error al obtener visitantes:', error);
       return { success: false, message: error.response?.data?.message || 'Error al cargar visitantes' };
     }
   },
@@ -279,16 +341,9 @@ export const visitanteService = {
   update: async (id, data) => {
     try {
       const response = await api.put(`/usuarios/${id}`, data);
-      if (response.data.success === false) {
-        return { success: false, message: response.data.message };
-      }
       return { success: true, message: 'Visitante actualizado exitosamente' };
     } catch (error) {
-      console.error('Error al actualizar visitante:', error);
-      if (error.response) {
-        return { success: false, message: error.response.data.message || 'Error al actualizar visitante' };
-      }
-      return { success: false, message: 'Error de conexión con el servidor' };
+      return { success: false, message: error.response?.data?.message || 'Error al actualizar visitante' };
     }
   },
 };
@@ -299,38 +354,7 @@ export const rolService = {
       const response = await api.get('/roles');
       return { success: true, data: response.data };
     } catch (error) {
-      console.error('Error al obtener roles:', error);
       return { success: false, message: error.response?.data?.message || 'Error al cargar roles' };
-    }
-  },
-
-  update: async (id, data) => {
-    try {
-      const response = await api.put(`/roles/${id}`, data);
-      return { success: true, data: response.data, message: 'Rol actualizado exitosamente' };
-    } catch (error) {
-      console.error('Error al actualizar rol:', error);
-      return { success: false, message: error.response?.data?.message || 'Error al actualizar rol' };
-    }
-  },
-
-  create: async (data) => {
-    try {
-      const response = await api.post('/roles', data);
-      return { success: true, data: response.data, message: 'Rol creado exitosamente' };
-    } catch (error) {
-      console.error('Error al crear rol:', error);
-      return { success: false, message: error.response?.data?.message || 'Error al crear rol' };
-    }
-  },
-
-  delete: async (id) => {
-    try {
-      const response = await api.delete(`/roles/${id}`);
-      return { success: true, message: 'Rol eliminado exitosamente' };
-    } catch (error) {
-      console.error('Error al eliminar rol:', error);
-      return { success: false, message: error.response?.data?.message || 'Error al eliminar rol' };
     }
   },
 };
@@ -338,15 +362,62 @@ export const rolService = {
 export const accessService = {
   getAll: async () => {
     try {
-      const response = await api.get('/accesos'); // Tu endpoint real
+      const response = await api.get('/accesos');
       return { success: true, data: response.data };
     } catch (error) {
-      return { success: false, message: error.response?.data?.mensaje || 'Error al obtener accesos' };
+      return { success: false, message: error.response?.data?.message || 'Error al obtener accesos' };
+    }
+  },
+
+  // NUEVO MÉTODO PARA OBTENER ACCESOS DE UN USUARIO
+  getUserAccess: async (userId) => {
+    try {
+      const response = await api.get(`/usuarios/${userId}/accesos`);
+      console.log('📡 getUserAccess response:', response.data);
+      if (response.data.success !== false) {
+        return { success: true, data: response.data };
+      }
+      return { success: false, message: response.data.message };
+    } catch (error) {
+      console.error('Error en getUserAccess:', error);
+      return { success: false, message: error.response?.data?.message || 'Error al cargar accesos' };
+    }
+  },
+  getRecent: async () => {
+    try {
+      const response = await api.get('/access/recent');
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error al obtener accesos recientes:', error);
+      return { success: false, message: error.response?.data?.message || 'Error al cargar accesos' };
     }
   },
 };
 
+export const dashboardService = {
+  getStats: async () => {
+    try {
+      const response = await api.get('/dashboard/stats');
+      if (response.data.success) {
+        return { success: true, data: response.data.data };
+      }
+      return { success: false, message: response.data.message };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Error al cargar estadísticas' };
+    }
+  },
 
+  getUserStats: async (userId) => {
+    try {
+      const response = await api.get(`/dashboard/user-stats/${userId}`);
+      if (response.data.success) {
+        return { success: true, data: response.data.data };
+      }
+      return { success: false, message: response.data.message };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Error al cargar estadísticas' };
+    }
+  },
+};
 
-export default api; // <--- Esto exporta api por defecto
-// authService ya está exportado arriba como export const
+export default api;

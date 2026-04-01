@@ -13,7 +13,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import { useFocusEffect } from '@react-navigation/native';
-import { accessService } from '../../services/api'; // Importamos tu nuevo servicio
+import { accessService } from '../../services/api';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 export default function RegistrosAcceso() {
   const [fontsLoaded] = useFonts({
@@ -27,6 +28,7 @@ export default function RegistrosAcceso() {
 
   const cargarRegistros = async () => {
     const result = await accessService.getAll();
+    console.log('📡 Registros:', result);
     if (result.success) {
       setRegistros(result.data);
     } else {
@@ -50,11 +52,25 @@ export default function RegistrosAcceso() {
   const registrosFiltrados = () => {
     if (!busqueda.trim()) return registros;
     const lowerBusqueda = busqueda.toLowerCase();
-    return registros.filter(reg => 
-      reg.usuario?.toLowerCase().includes(lowerBusqueda) || 
-      reg.credencial?.toLowerCase().includes(lowerBusqueda) ||
-      reg.zona?.toLowerCase().includes(lowerBusqueda)
-    );
+    return registros.filter(reg => {
+      const nombre = reg.credencial?.usuario?.Nombre || reg.vehiculo?.Placa || '';
+      const codigo = reg.credencial?.Codigo_Credencial || '';
+      const tipo = reg.tipoAcceso?.Nombre_Tipo || '';
+      return nombre.toLowerCase().includes(lowerBusqueda) ||
+             codigo.toLowerCase().includes(lowerBusqueda) ||
+             tipo.toLowerCase().includes(lowerBusqueda);
+    });
+  };
+
+  const formatFecha = (fechaISO) => {
+    const fecha = new Date(fechaISO);
+    return fecha.toLocaleString('es-MX', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   if (!fontsLoaded) return null;
@@ -70,7 +86,7 @@ export default function RegistrosAcceso() {
 
   return (
     <SafeAreaView style={styles.contenedor}>
-      {/* Encabezado idéntico al de Usuarios */}
+      {/* Encabezado */}
       <View style={styles.encabezadoBlanco}>
         <Text style={styles.textoTitulo}>Accesos</Text>
         <TouchableOpacity style={styles.badgePerfil}>
@@ -79,11 +95,11 @@ export default function RegistrosAcceso() {
         </TouchableOpacity>
       </View>
 
-      {/* Buscador idéntico al de Usuarios */}
+      {/* Buscador */}
       <View style={styles.contenedorFiltros}>
         <TextInput 
           style={styles.inputBusqueda} 
-          placeholder="Buscar por usuario, zona o ID..." 
+          placeholder="Buscar por usuario, código o tipo..." 
           placeholderTextColor="#365563"
           value={busqueda}
           onChangeText={setBusqueda}
@@ -92,16 +108,16 @@ export default function RegistrosAcceso() {
 
       <FlatList
         data={registrosFiltrados()}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item) => item.ID_Registro?.toString() || Math.random().toString()}
         renderItem={({ item }) => (
           <TarjetaAcceso 
             datos={{
-              fecha: item.fecha_hora, // Ajusta según los nombres de tu BD
-              usuario: item.Nombre_Completo || 'Desconocido',
-              zona: item.Zona_Acceso || 'General',
-              credencial: item.ID_Credencial || item.Placa,
-              tipo: item.Tipo_Acceso,
-              estado: item.Estatus_Acceso // Ej: 'Autorizado' o 'Denegado'
+              fecha: formatFecha(item.Fecha_Hora),
+              usuario: item.credencial?.usuario?.Nombre || item.vehiculo?.Placa || 'Desconocido',
+              zona: item.tipoAcceso?.Nombre_Tipo === 'Peatonal' ? 'Acceso Principal' : 'Estacionamiento',
+              credencial: item.credencial?.Codigo_Credencial || item.vehiculo?.Placa || 'N/A',
+              tipo: item.tipoAcceso?.Nombre_Tipo || 'Acceso',
+              estado: item.Acceso_Autorizado ? 'Autorizado' : 'Denegado'
             }} 
           />
         )}
@@ -111,7 +127,8 @@ export default function RegistrosAcceso() {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No hay registros el día de hoy</Text>
+            <Icon name="time-outline" size={60} color="#ABBCC4" />
+            <Text style={styles.emptyText}>No hay registros de acceso</Text>
           </View>
         }
       />
@@ -153,7 +170,6 @@ const Fila = ({ label, value }) => (
 );
 
 const styles = StyleSheet.create({
-  // Se mantienen tus estilos para conservar la estética industrial
   contenedor: { flex: 1, backgroundColor: '#C8DFEA' },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#C8DFEA' },
   loadingText: { marginTop: 10, color: '#365563', fontSize: 14 },

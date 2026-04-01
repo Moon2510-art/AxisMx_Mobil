@@ -11,146 +11,157 @@ use Illuminate\Support\Facades\Log;
 class AccesoController extends Controller
 {
     public function verificarCredencial(Request $request)
-{
-    $credencial = Credencial::with('usuario')
-        ->where('Codigo_Credencial', $request->codigo_credencial)
-        ->first();
+    {
+        try {
+            $request->validate([
+                'codigo_credencial' => 'required|string'
+            ]);
 
-    if (!$credencial) {
-        return response()->json([
-            'success' => false,
-            'acceso_autorizado' => false,
-            'mensaje' => 'Credencial no encontrada'
-        ]);
-    }
+            $credencial = Credencial::with('usuario')->where('Codigo_Credencial', $request->codigo_credencial)->first();
 
-    $usuario = $credencial->usuario;
+            if (!$credencial) {
+                return response()->json([
+                    'success' => false,
+                    'acceso_autorizado' => false,
+                    'mensaje' => 'Credencial no encontrada'
+                ]);
+            }
 
-    if ($usuario->ID_Estado != 1) {
-        return response()->json([
-            'success' => true,
-            'acceso_autorizado' => false,
-            'mensaje' => 'Usuario inactivo'
-        ]);
-    }
+            $usuario = $credencial->usuario;
 
-    return response()->json([
-        'success' => true,
-        'acceso_autorizado' => true,
-        'mensaje' => 'Acceso autorizado',
-        'usuario' => $usuario
-    ]);
+            if ($usuario->ID_Estado != 1) {
+                return response()->json([
+                    'success' => true,
+                    'acceso_autorizado' => false,
+                    'mensaje' => 'Usuario inactivo. Contacte al administrador.'
+                ]);
+            }
 
+            // Registrar acceso
+            $registro = RegistroAcceso::create([
+                'ID_Credencial' => $credencial->ID_Credencial,
+                'ID_Tipo_Acceso' => 1, // Peatonal
+                'Acceso_Autorizado' => true,
+                'Observaciones' => 'Acceso peatonal autorizado'
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'acceso_autorizado' => true,
+                'mensaje' => 'Acceso autorizado',
+                'data' => $registro
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error en verificarCredencial: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function verificarPlaca(Request $request)
-{
-    $imageBase64 = $request->input('image');
+    {
+        try {
+            $request->validate([
+                'placa' => 'required|string'
+            ]);
 
-    if (!$imageBase64) {
-        return response()->json([
-            'success' => false,
-            'acceso_autorizado' => false,
-            'mensaje' => 'Imagen no recibida'
-        ]);
-    }
+            $vehiculo = Vehiculo::with(['modelo.marca', 'usuario'])->where('Placa', $request->placa)->first();
 
-    try {
-        // Limpiar base64
-        $imageBase64 = str_replace('data:image/jpeg;base64,', '', $imageBase64);
-        $image = base64_decode($imageBase64);
+            if (!$vehiculo) {
+                return response()->json([
+                    'success' => false,
+                    'acceso_autorizado' => false,
+                    'mensaje' => 'Vehículo no registrado'
+                ]);
+            }
 
-        $filePath = storage_path('app/placa.jpg');
-        file_put_contents($filePath, $image);
+            $usuario = $vehiculo->usuario;
 
-        // 🔥 OCR REAL (rápido usando Tesseract)
-        $output = shell_exec("tesseract $filePath stdout 2>/dev/null");
+            if (!$usuario || $usuario->ID_Estado != 1) {
+                return response()->json([
+                    'success' => true,
+                    'acceso_autorizado' => false,
+                    'mensaje' => 'Usuario inactivo o vehículo sin propietario válido'
+                ]);
+            }
 
-        $placa = strtoupper(preg_replace('/[^A-Z0-9]/', '', $output));
+            // Registrar acceso
+            $registro = RegistroAcceso::create([
+                'ID_Vehiculo' => $vehiculo->ID_Vehiculo,
+                'ID_Tipo_Acceso' => 2, // Vehicular
+                'Acceso_Autorizado' => true,
+                'Observaciones' => 'Acceso vehicular autorizado'
+            ]);
 
-        if (!$placa) {
             return response()->json([
                 'success' => true,
-                'acceso_autorizado' => false,
-                'mensaje' => 'No se pudo detectar la placa'
+                'acceso_autorizado' => true,
+                'mensaje' => 'Acceso autorizado',
+                'data' => $registro
             ]);
-        }
 
-        $vehiculo = Vehiculo::where('Placa', $placa)->first();
-
-        if (!$vehiculo) {
+        } catch (\Exception $e) {
+            Log::error('Error en verificarPlaca: ' . $e->getMessage());
             return response()->json([
-                'success' => true,
-                'acceso_autorizado' => false,
-                'mensaje' => "Placa $placa no registrada"
-            ]);
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'acceso_autorizado' => true,
-            'mensaje' => "Acceso autorizado: $placa",
-            'placa' => $placa,
-            'vehiculo' => $vehiculo
-        ]);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'acceso_autorizado' => false,
-            'mensaje' => 'Error procesando imagen'
-        ]);
     }
-}
 
     public function historial(Request $request)
     {
-        // Lógica para obtener historial
-        // ...
+        try {
+            $limit = $request->get('limit', 50);
+            
+            $registros = RegistroAcceso::with(['credencial.usuario', 'vehiculo', 'tipoAcceso'])
+                ->orderBy('Fecha_Hora', 'desc')
+                ->limit($limit)
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $registros
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error en historial: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function stats(Request $request)
     {
         try {
-            $vehiculares = RegistroAcceso::where('ID_Tipo_Acceso', 2)
-                ->whereBetween('Fecha_Hora', [now()->startOfWeek(), now()->endOfWeek()])
+            $totalHoy = RegistroAcceso::whereDate('Fecha_Hora', today())->count();
+            $autorizadosHoy = RegistroAcceso::whereDate('Fecha_Hora', today())
+                ->where('Acceso_Autorizado', true)
                 ->count();
-                
-            $peatonales = RegistroAcceso::where('ID_Tipo_Acceso', 1)
-                ->whereBetween('Fecha_Hora', [now()->startOfWeek(), now()->endOfWeek()])
-                ->count();
-                
-            $zonas = ['Entrada Principal', 'Entrada Secundaria', 'Estacionamiento Norte', 'Estacionamiento Sur'];
-            $zonaMasTrafico = $zonas[array_rand($zonas)];
-            
+            $denegadosHoy = $totalHoy - $autorizadosHoy;
+
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'accesosVehiculares' => $vehiculares,
-                    'accesosPeatonales' => $peatonales,
-                    'totalAccesos' => $vehiculares + $peatonales,
-                    'zonaMasTrafico' => $zonaMasTrafico
+                    'total_accesos_hoy' => $totalHoy,
+                    'accesos_autorizados_hoy' => $autorizadosHoy,
+                    'accesos_denegados_hoy' => $denegadosHoy
                 ]
             ]);
-            
+
         } catch (\Exception $e) {
+            Log::error('Error en stats: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error al obtener estadísticas'
+                'message' => $e->getMessage()
             ], 500);
         }
     }
-
-    private function simularOCR()
-{
-    $letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    return 
-        $letras[rand(0,25)] .
-        $letras[rand(0,25)] .
-        $letras[rand(0,25)] .
-        '-' .
-        rand(100,999);
-}
 
     public function recent(Request $request)
     {
@@ -162,16 +173,15 @@ class AccesoController extends Controller
                 ->limit($limit)
                 ->get()
                 ->map(function($registro) {
-                    $zonas = ['Entrada Principal', 'Entrada Secundaria', 'Estacionamiento Norte', 'Estacionamiento Sur'];
                     return [
                         'ID_Registro' => $registro->ID_Registro,
                         'Fecha_Hora' => $registro->Fecha_Hora,
                         'Acceso_Autorizado' => $registro->Acceso_Autorizado,
                         'usuario' => $registro->credencial ? $registro->credencial->usuario : null,
+                        'vehiculo' => $registro->vehiculo,
                         'tipoAcceso' => $registro->tipoAcceso,
                         'Codigo_Credencial' => $registro->credencial ? $registro->credencial->Codigo_Credencial : null,
                         'Placa' => $registro->vehiculo ? $registro->vehiculo->Placa : null,
-                        'zona' => $zonas[array_rand($zonas)]
                     ];
                 });
                 
@@ -181,9 +191,10 @@ class AccesoController extends Controller
             ]);
             
         } catch (\Exception $e) {
+            Log::error('Error en recent: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error al obtener accesos recientes'
+                'message' => $e->getMessage()
             ], 500);
         }
     }

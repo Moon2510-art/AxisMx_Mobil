@@ -15,7 +15,8 @@ class Vehiculo extends Model
         'ID_Modelo',
         'Anio',
         'Color',
-        'ID_Estado'
+        'ID_Estado',
+        'ID_Usuario'
     ];
 
     public function modelo()
@@ -37,4 +38,10 @@ class Vehiculo extends Model
     {
         return $this->belongsTo(Estado::class, 'ID_Estado');
     }
+
+    // Relación con usuario (pertenece a un usuario)
+public function usuario()
+{
+    return $this->belongsTo(Usuario::class, 'ID_Usuario');
+}
 }

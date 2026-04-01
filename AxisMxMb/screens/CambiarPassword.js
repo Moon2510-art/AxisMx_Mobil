@@ -7,21 +7,15 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFonts } from 'expo-font';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { usuarioService } from '../../services/api'; // Asegúrate de que tu api.js tenga el método update
-import { useAuth } from '../../context/AuthContext';
+import { authService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function CambiarPassword({ navigation }) {
   const { user } = useAuth();
-  const [fontsLoaded] = useFonts({
-    Ultra: require("../../assets/fonts/DelaGothicOne-Regular.ttf"),
-  });
 
   const [form, setForm] = useState({
     actual: '',
@@ -29,10 +23,11 @@ export default function CambiarPassword({ navigation }) {
     confirmar: ''
   });
   const [loading, setLoading] = useState(false);
-  const [secureText, setSecureText] = useState(true);
+  const [showActual, setShowActual] = useState(true);
+  const [showNueva, setShowNueva] = useState(true);
+  const [showConfirmar, setShowConfirmar] = useState(true);
 
   const handleUpdate = async () => {
-    // Validaciones básicas
     if (!form.actual || !form.nueva || !form.confirmar) {
       Alert.alert('Error', 'Por favor completa todos los campos.');
       return;
@@ -44,14 +39,13 @@ export default function CambiarPassword({ navigation }) {
     }
 
     if (form.nueva !== form.confirmar) {
-      Alert.alert('Error', 'La nueva contraseña y la confirmación no coinciden.');
+      Alert.alert('Error', 'Las contraseñas no coinciden.');
       return;
     }
 
     setLoading(true);
     try {
-      // Nota: Aquí llamamos al servicio. El backend debe validar la "actual"
-      const result = await usuarioService.updatePassword(user.id_usuario, {
+      const result = await authService.changePassword(user?.ID_Usuario || user?.id, {
         passwordActual: form.actual,
         nuevaPassword: form.nueva
       });
@@ -64,152 +58,173 @@ export default function CambiarPassword({ navigation }) {
         Alert.alert('Error', result.message || 'No se pudo actualizar la contraseña');
       }
     } catch (error) {
-      Alert.alert('Error', 'Hubo un problema con la conexión al servidor.');
+      Alert.alert('Error', 'Hubo un problema con la conexión.');
     } finally {
       setLoading(false);
     }
   };
 
-  if (!fontsLoaded) return null;
-
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-      >
-        {/* HEADER ESTILO ULTRA */}
-        <View style={styles.whiteHeader}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Icon name="chevron-back" size={28} color="#114B5F" />
-          </TouchableOpacity>
-          <View>
-            <Text style={styles.ultraTitle}>Seguridad</Text>
-            <Text style={styles.headerSubtitle}>Actualizar credenciales</Text>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Seguridad</Text>
+          
+          {/* Contraseña Actual */}
+          <View style={styles.menuItem}>
+            <Icon name="lock-closed-outline" size={24} color="#114B5F" />
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuItemText}>Contraseña actual</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ingresa tu contraseña actual"
+                  placeholderTextColor="#999"
+                  secureTextEntry={showActual}
+                  value={form.actual}
+                  onChangeText={(t) => setForm({...form, actual: t})}
+                />
+                <TouchableOpacity onPress={() => setShowActual(!showActual)}>
+                  <Icon name={showActual ? "eye-outline" : "eye-off-outline"} size={20} color="#999" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
+          {/* Nueva Contraseña */}
+          <View style={styles.menuItem}>
+            <Icon name="key-outline" size={24} color="#114B5F" />
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuItemText}>Nueva contraseña</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Mínimo 6 caracteres"
+                  placeholderTextColor="#999"
+                  secureTextEntry={showNueva}
+                  value={form.nueva}
+                  onChangeText={(t) => setForm({...form, nueva: t})}
+                />
+                <TouchableOpacity onPress={() => setShowNueva(!showNueva)}>
+                  <Icon name={showNueva ? "eye-outline" : "eye-off-outline"} size={20} color="#999" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
+          {/* Confirmar Contraseña */}
+          <View style={[styles.menuItem, { borderBottomWidth: 0 }]}>
+            <Icon name="checkmark-circle-outline" size={24} color="#114B5F" />
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuItemText}>Confirmar contraseña</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Repite la nueva contraseña"
+                  placeholderTextColor="#999"
+                  secureTextEntry={showConfirmar}
+                  value={form.confirmar}
+                  onChangeText={(t) => setForm({...form, confirmar: t})}
+                />
+                <TouchableOpacity onPress={() => setShowConfirmar(!showConfirmar)}>
+                  <Icon name={showConfirmar ? "eye-outline" : "eye-off-outline"} size={20} color="#999" />
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.infoBox}>
-            <Icon name="shield-checkmark-outline" size={40} color="#114B5F" />
-            <Text style={styles.infoText}>
-              Tu nueva contraseña debe ser distinta a la anterior para garantizar la seguridad de tu cuenta.
-            </Text>
-          </View>
+        {/* Botón Guardar */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity 
+            style={[styles.saveButton, loading && { opacity: 0.7 }]} 
+            onPress={handleUpdate}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <Text style={styles.saveButtonText}>Actualizar contraseña</Text>
+            )}
+          </TouchableOpacity>
+        </View>
 
-          <View style={styles.formCard}>
-            {/* Password Actual */}
-            <Text style={styles.label}>Contraseña Actual</Text>
-            <View style={styles.inputContainer}>
-              <Icon name="lock-closed-outline" size={20} color="#365563" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Ingresa tu contraseña actual"
-                secureTextEntry={secureText}
-                value={form.actual}
-                onChangeText={(t) => setForm({...form, actual: t})}
-              />
-            </View>
-
-            {/* Password Nueva */}
-            <Text style={styles.label}>Nueva Contraseña</Text>
-            <View style={styles.inputContainer}>
-              <Icon name="key-outline" size={20} color="#365563" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Mínimo 6 caracteres"
-                secureTextEntry={secureText}
-                value={form.nueva}
-                onChangeText={(t) => setForm({...form, nueva: t})}
-              />
-              <TouchableOpacity onPress={() => setSecureText(!secureText)}>
-                <Icon name={secureText ? "eye-outline" : "eye-off-outline"} size={20} color="#666" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Confirmar Password */}
-            <Text style={styles.label}>Confirmar Nueva Contraseña</Text>
-            <View style={styles.inputContainer}>
-              <Icon name="checkmark-circle-outline" size={20} color="#365563" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Repite la nueva contraseña"
-                secureTextEntry={secureText}
-                value={form.confirmar}
-                onChangeText={(t) => setForm({...form, confirmar: t})}
-              />
-            </View>
-
-            <TouchableOpacity 
-              style={[styles.btnGuardar, loading && { opacity: 0.7 }]} 
-              onPress={handleUpdate}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#FFF" />
-              ) : (
-                <Text style={styles.btnText}>Actualizar Contraseña</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#C8DFEA' },
-  whiteHeader: {
-    backgroundColor: '#FFF',
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    borderRadius: 20,
-    marginHorizontal: 15,
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  scrollContent: {
+    paddingBottom: 30,
+  },
+  sectionContainer: {
+    backgroundColor: '#fff',
     marginTop: 15,
-    elevation: 5,
+    paddingVertical: 5,
   },
-  backBtn: { marginRight: 15 },
-  ultraTitle: { fontSize: 22, color: '#114B5F', fontFamily: "Ultra" },
-  headerSubtitle: { fontSize: 13, color: '#888', marginTop: -5 },
-  
-  scrollContent: { padding: 20 },
-  infoBox: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    backgroundColor: '#FFF', 
-    padding: 15, 
-    borderRadius: 15, 
-    marginBottom: 20,
-    borderLeftWidth: 5,
-    borderLeftColor: '#114B5F'
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  infoText: { flex: 1, marginLeft: 15, fontSize: 12, color: '#365563', lineHeight: 18 },
-  
-  formCard: { backgroundColor: '#FFF', borderRadius: 20, padding: 20, elevation: 3 },
-  label: { fontSize: 14, fontWeight: 'bold', color: '#114B5F', marginBottom: 8, marginLeft: 5 },
-  inputContainer: {
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  menuItemContent: {
+    flex: 1,
+    marginLeft: 15,
+    marginRight: 10,
+  },
+  menuItemText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F8FA',
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    marginBottom: 20,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: '#E1E8ED'
+    borderColor: '#E0E0E0',
   },
-  inputIcon: { marginRight: 10 },
-  input: { flex: 1, height: 50, color: '#333' },
-  
-  btnGuardar: {
+  input: {
+    flex: 1,
+    fontSize: 15,
+    color: '#333',
+    paddingVertical: 10,
+  },
+  buttonContainer: {
+    paddingHorizontal: 20,
+    marginTop: 25,
+    marginBottom: 20,
+  },
+  saveButton: {
     backgroundColor: '#114B5F',
-    height: 55,
-    borderRadius: 15,
-    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 10,
     alignItems: 'center',
-    marginTop: 10,
-    elevation: 4,
   },
-  btnText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' }
+  saveButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });

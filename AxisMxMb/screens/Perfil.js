@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React from 'react';
 import {
   View,
@@ -101,7 +100,6 @@ export default function PerfilScreen({ navigation }) {
 
       <View style={styles.settingsContainer}>
         <Text style={styles.menuTitle}>Configuración</Text>
-        // En PerfilScreen.js buscar el botón de notificaciones:
         <TouchableOpacity 
           style={styles.menuItem} 
           onPress={() => navigation.navigate('Notificaciones')} // <--- Añadir esta línea
@@ -239,17 +237,3 @@ const styles = StyleSheet.create({
   },
   
 });
-=======
-import { Text, StyleSheet, View } from 'react-native'
-import React, { Component } from 'react'
-
-export default function Perfil () {
-    return (
-      <View>
-        <Text>Ah espera de diseno</Text>
-      </View>
-    )
-}
-
-const styles = StyleSheet.create({})
->>>>>>> main

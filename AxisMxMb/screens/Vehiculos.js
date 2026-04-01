@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import { useFocusEffect } from '@react-navigation/native';
-import { vehicleService } from '../../services/api';
+import { vehicleService } from '../services/api';
 
 export default function Vehiculos({ navigation }) {
   const [fontsLoaded] = useFonts({
@@ -85,7 +85,6 @@ export default function Vehiculos({ navigation }) {
         </TouchableOpacity>
       </View>
 
-<<<<<<< HEAD:AxisMxMb/screens/OpcionesScreens/Vehiculos.js
       {/* Búsqueda */}
       <View style={styles.contenedorFiltros}>
         <TextInput 
@@ -131,44 +130,13 @@ export default function Vehiculos({ navigation }) {
           </View>
         }
       />
-=======
-        {/* 2. Filtros y Búsqueda */}
-        <View style={styles.contenedorFiltros}>
-          <View style={styles.filaFiltros}>
-            <Text style={styles.tituloSeccion}>Registro{'\n'}Vehicular</Text>
-            <TouchableOpacity style={styles.botonAgregar}>
-              <Text style={styles.textoAgregar}>+ Agregar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* 3. Lista de Vehículos */}
-        <View style={styles.contenedorLista}>
-          <TarjetaVehiculo 
-            datos={{
-              id: "1",
-              modelo: "Toyota Corolla",
-              placa: "ABC-123",
-              propietario: "Juan Garcia",
-              descripcion: "Vehiculo Personal",
-              estado: "Activo"
-            }} 
-          />
-        </View>
-
-      </ScrollView>
->>>>>>> main:AxisMxMb/screens/Vehiculos.js
     </SafeAreaView>
   );
 }
 
 const TarjetaVehiculo = ({ datos }) => (
   <View style={styles.tarjetaFila}>
-<<<<<<< HEAD:AxisMxMb/screens/OpcionesScreens/Vehiculos.js
     <Fila label="ID" value={datos.id.toString()} />
-=======
-    <Fila label="Modelo" value={datos.modelo} />
->>>>>>> main:AxisMxMb/screens/Vehiculos.js
     <Fila label="Placa" value={datos.placa} />
     <Fila label="Marca/Modelo" value={datos.marcaModelo} />
     <Fila label="Año" value={datos.anio} />
@@ -239,7 +207,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 15,
     marginBottom: 15,
   },
-<<<<<<< HEAD:AxisMxMb/screens/OpcionesScreens/Vehiculos.js
   inputBusqueda: {
     backgroundColor: '#C8DFEA',
     borderRadius: 10,
@@ -250,28 +217,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#365563',
   },
-
-=======
-  filaFiltros: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  tituloSeccion: { fontSize: 20, color: '#365563', marginBottom: 15, fontFamily: "Ultra" },
-  botonAgregar: {
-    backgroundColor: '#C8DFEA',
-    paddingHorizontal: 15,
-    height: 40,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#365563',
-    justifyContent: 'center',
-  },
-  textoAgregar: { 
-    color: '#365563', 
-    fontSize: 12 
-  },
->>>>>>> main:AxisMxMb/screens/Vehiculos.js
   contenedorLista: {
     paddingHorizontal: 15,
     paddingBottom: 20,
@@ -317,13 +262,10 @@ const styles = StyleSheet.create({
     color: '#365563',
     fontSize: 14,
   },
-<<<<<<< HEAD:AxisMxMb/screens/OpcionesScreens/Vehiculos.js
-=======
   tarjetaFila: { backgroundColor: '#C8DFEA', borderRadius: 8, overflow: 'hidden', marginBottom: 15, borderWidth: 2, borderColor: '#FFF' },
   fila: { flexDirection: 'row', borderBottomWidth: 3, borderBottomColor: '#FFF' },
   colEtiqueta: { width: '35%', backgroundColor: '#365563', padding: 10, justifyContent: 'center' },
   textoEtiqueta: { color: '#FFF', fontSize: 11, fontFamily: "Ultra" },
   colValor: { width: '65%', padding: 10, justifyContent: 'center' },
   textoValor: { color: '#365563', fontSize: 12 },
->>>>>>> main:AxisMxMb/screens/Vehiculos.js
 });

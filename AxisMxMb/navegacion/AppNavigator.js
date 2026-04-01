@@ -24,10 +24,10 @@ import Visitantes from '../screens/OpcionesScreens/Visitantes';
 import RegistrosAcceso from '../screens/OpcionesScreens/RegistrosAcceso';
 
 // Pantallas de usuario normal (crear si no existen)
-// import DashboardUsuario from '../screens/DashboardUsuario';
-// import MiCredencial from '../screens/MiCredencial';
-// import MisAccesos from '../screens/MisAccesos';
-// import MiPerfil from '../screens/MiPerfil';
+import DashboardUsuario from '../screens/DashboardUsuario';
+import PerfilDigital from '../screens/CredencialDigital';
+import MisAccesos from '../screens/MisAccesos';
+import Perfil from '../screens/Perfil';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -87,9 +87,9 @@ function UserTabs() {
       })}
     >
       <Tab.Screen name="Inicio" component={DashboardUsuario} />
-      <Tab.Screen name="Credencial" component={MiCredencial} />
+      <Tab.Screen name="Credencial" component={PerfilDigital} />
       <Tab.Screen name="Mis Accesos" component={MisAccesos} />
-      <Tab.Screen name="Perfil" component={MiPerfil} />
+      <Tab.Screen name="Perfil" component={Perfil} />
     </Tab.Navigator>
   );
 }
@@ -151,7 +151,7 @@ export default function AppNavigator() {
   }
 
   // Roles permitidos para la app de administración
-  const adminRoles = ['Administrador', 'Seguridad'];
+  const adminRoles = ['Administrativo', 'Seguridad'];
   
   if (adminRoles.includes(userRole)) {
     return <AdminStack />;

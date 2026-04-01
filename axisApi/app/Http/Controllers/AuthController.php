@@ -7,6 +7,7 @@ use App\Models\Rol;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use App\Models\Credencial;
 
 class AuthController extends Controller
 {
@@ -33,23 +34,24 @@ class AuthController extends Controller
         }
 
         // Verificar contraseña
-        if (!Hash::check($request->password, $usuario->password)) {
+        // IMPORTANTE: el campo real en la tabla Usuarios se llama 'Contrasena'
+        if (!Hash::check($request->password, $usuario->Contrasena)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Credenciales incorrectas'
             ], 401);
         }
 
-        // Verificar rol permitido (solo Administrador o Seguridad)
-        $rolesPermitidos = ['Administrador', 'Seguridad'];
+        // Obtener el rol del usuario
         $rolUsuario = $usuario->rol->Nombre_Rol ?? '';
 
-        if (!in_array($rolUsuario, $rolesPermitidos)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No tienes permisos para acceder a esta aplicación'
-            ], 403);
-        }
+        // Verificar que el usuario esté activo (opcional, dependiendo del modelo)
+        // if ($usuario->ID_Estado != 1) { // Asumiendo 1 es activo
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'Usuario inactivo'
+        //     ], 403);
+        // }
 
         // Crear token
         $token = $usuario->createToken('auth-token')->plainTextToken;
@@ -64,7 +66,8 @@ class AuthController extends Controller
                     'nombre'            => $usuario->Nombre,
                     'apellido_paterno'  => $usuario->Ap_Paterno,
                     'email'             => $usuario->Email,
-                    'rol'               => $rolUsuario
+                    'rol'               => $rolUsuario,
+                    'estado'            => $usuario->ID_Estado
                 ],
                 'token'      => $token,
                 'token_type' => 'Bearer'
@@ -72,91 +75,98 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Registrar nuevo usuario (estado inactivo por defecto)
-     */
     public function register(Request $request)
-    {
-        try {
-            $request->validate([
-                'nombre'           => 'required|string|max:100',
-                'apellido_paterno' => 'required|string|max:100',
-                'apellido_materno' => 'nullable|string|max:100',
-                'email'            => 'required|email|unique:Usuarios,Email',
-                'password'         => 'required|string|min:6|confirmed',
-                'matricula'        => 'nullable|string|max:9|unique:Usuarios,Matricula',
-                'numero_empleado'  => 'nullable|string|max:20|unique:Usuarios,Numero_Empleado',
-                'telefono'         => 'nullable|string|max:20',
-            ]);
+{
+    try {
+        $request->validate([
+            'nombre' => 'required|string|max:100',
+            'apellido_paterno' => 'required|string|max:100',
+            'apellido_materno' => 'nullable|string|max:100',
+            'email' => 'required|email|unique:Usuarios,Email',
+            'password' => 'required|string|min:6|confirmed',
+            'matricula' => 'nullable|string|max:9|unique:Usuarios,Matricula',
+            'numero_empleado' => 'nullable|string|max:20|unique:Usuarios,Numero_Empleado',
+            'telefono' => 'nullable|string|max:20',
+            'codigo_credencial' => 'required|string|unique:Credenciales,Codigo_Credencial|min:8|max:20' // NUEVO: código de credencial
+        ]);
 
-            // Validar que tenga matrícula o número de empleado
-            if (!$request->matricula && !$request->numero_empleado) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Debes proporcionar matrícula o número de empleado'
-                ], 400);
-            }
-
-            // Obtener rol "Visitante"
-            $rolVisitante = Rol::where('Nombre_Rol', 'Visitante')->first();
-
-            if (!$rolVisitante) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error en la configuración del sistema. Contacta al administrador.'
-                ], 500);
-            }
-
-            // Crear usuario (estado INACTIVO = 2)
-            $usuario = Usuario::create([
-                'Matricula'       => $request->matricula,
-                'Numero_Empleado' => $request->numero_empleado,
-                'Nombre'          => $request->nombre,
-                'Ap_Paterno'      => $request->apellido_paterno,
-                'Ap_Materno'      => $request->apellido_materno,
-                'Email'           => $request->email,
-                'Telefono'        => $request->telefono,
-                'Empresa'         => $request->empresa,
-                'ID_Rol'          => $rolVisitante->ID_Rol,
-                'password'        => Hash::make($request->password),
-                'ID_Estado'       => 2, // INACTIVO
-            ]);
-
-            Log::info('Nuevo registro de usuario', [
-                'user_id' => $usuario->ID_Usuario,
-                'email'   => $usuario->Email,
-                'status'  => 'inactivo'
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Registro exitoso. Tu cuenta está pendiente de activación por un administrador.',
-                'data' => [
-                    'id'     => $usuario->ID_Usuario,
-                    'nombre' => $usuario->Nombre,
-                    'email'  => $usuario->Email,
-                    'estado' => 'Inactivo'
-                ]
-            ], 201);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        // Validar que tenga matrícula o número de empleado
+        if (!$request->matricula && !$request->numero_empleado) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error de validación',
-                'errors'  => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            Log::error('Error en registro', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+                'message' => 'Debes proporcionar matrícula o número de empleado'
+            ], 400);
+        }
 
+        // Buscar el rol "Alumno" por defecto (o el que corresponda)
+        $rolAlumno = Rol::where('Nombre_Rol', 'Alumno')->first();
+        
+        if (!$rolAlumno) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error en el servidor: ' . $e->getMessage()
+                'message' => 'Error en la configuración del sistema. Contacte al administrador.'
             ], 500);
         }
+
+        // Crear usuario con estado INACTIVO (ID_Estado = 2)
+        $usuario = Usuario::create([
+            'Matricula' => $request->matricula,
+            'Numero_Empleado' => $request->numero_empleado,
+            'Nombre' => $request->nombre,
+            'Ap_Paterno' => $request->apellido_paterno,
+            'Ap_Materno' => $request->apellido_materno,
+            'Email' => $request->email,
+            'Telefono' => $request->telefono,
+            'Empresa' => $request->empresa,
+            'ID_Rol' => $rolAlumno->ID_Rol,
+            'Contrasena' => Hash::make($request->password),
+            'ID_Estado' => 2, // INACTIVO
+        ]);
+
+        // CREAR LA CREDENCIAL DEL USUARIO
+        $credencial = Credencial::create([
+            'Codigo_Credencial' => $request->codigo_credencial,
+            'ID_Usuario' => $usuario->ID_Usuario,
+            'Fecha_Emision' => now(),
+            'ID_Estado' => 1, // Activa
+        ]);
+
+        Log::info('Nuevo registro de usuario', [
+            'user_id' => $usuario->ID_Usuario,
+            'email' => $usuario->Email,
+            'credencial' => $credencial->Codigo_Credencial,
+            'status' => 'inactivo'
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Registro exitoso. Tu cuenta está pendiente de activación por un administrador.',
+            'data' => [
+                'user' => [
+                    'id' => $usuario->ID_Usuario,
+                    'nombre' => $usuario->Nombre,
+                    'email' => $usuario->Email,
+                    'estado' => 'Inactivo'
+                ],
+                'credencial' => [
+                    'codigo' => $credencial->Codigo_Credencial,
+                    'fecha_emision' => $credencial->Fecha_Emision
+                ]
+            ]
+        ], 201);
+
+    } catch (\Exception $e) {
+        Log::error('Error en registro', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Error en el servidor: ' . $e->getMessage()
+        ], 500);
     }
+}
 
     /**
      * Listar usuarios pendientes de activación (solo administradores/seguridad)

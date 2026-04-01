@@ -12,7 +12,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { vehicleService, marcaService, modeloService } from '../../services/api';
+import { vehicleService, marcaService, modeloService } from '../services/api';
 
 export default function CrearVehiculo({ navigation }) {
   const [loading, setLoading] = useState(false);

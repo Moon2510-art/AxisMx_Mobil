@@ -4,80 +4,132 @@ namespace App\Http\Controllers;
 
 use App\Models\Vehiculo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class VehiculoController extends Controller
 {
     public function index()
     {
-        $vehiculos = Vehiculo::with(['modelo.marca', 'propietarios' => function($query) {
-            // Solo propietarios activos (sin fecha de fin)
-            $query->wherePivot('Fecha_Fin', null);
-        }])->get();
+        $vehiculos = Vehiculo::with(['modelo.marca', 'usuario'])->get();
         
         // Formatear para agregar el propietario actual
         $vehiculos->each(function($vehiculo) {
-            $vehiculo->propietario_actual = $vehiculo->propietarios->first();
-            unset($vehiculo->propietarios);
+            $vehiculo->propietario_actual = $vehiculo->usuario;
+            unset($vehiculo->usuario);
         });
         
-    return response()->json($vehiculos);
-}
+        return response()->json($vehiculos);
+    }
 
-// Los demás métodos (show, store, update, destroy) se mantienen
-// pero desde la app de administración NO se usarán
+    public function getByUser($userId)
+    {
+        $vehiculos = Vehiculo::where('ID_Usuario', $userId)
+            ->with('modelo.marca')
+            ->get();
+        
+        return response()->json($vehiculos);
+    }
 
     public function store(Request $request)
     {
-        DB::table('vehiculos')->insert([
-            'ID_Usuario' => $request->ID_Usuario,
-            'Placa' => $request->Placa,
-            'Marca' => $request->Marca,
-            'Modelo' => $request->Modelo,
-            'Color' => $request->Color
-        ]);
+        try {
+            $validated = $request->validate([
+                'Placa' => 'required|unique:Vehiculos',
+                'ID_Modelo' => 'required|exists:Modelos,ID_Modelo',
+                'ID_Usuario' => 'required|exists:Usuarios,ID_Usuario',
+                'Anio' => 'nullable|integer',
+                'Color' => 'nullable|string',
+                'ID_Estado' => 'nullable|integer'
+            ]);
 
-        return response()->json([
-            "message" => "Vehiculo registrado"
-        ]);
+            $vehiculo = Vehiculo::create([
+                'Placa' => strtoupper($request->Placa),
+                'ID_Modelo' => $request->ID_Modelo,
+                'ID_Usuario' => $request->ID_Usuario,
+                'Anio' => $request->Anio,
+                'Color' => $request->Color,
+                'ID_Estado' => $request->ID_Estado ?? 1
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => $vehiculo,
+                'message' => 'Vehículo registrado exitosamente'
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function update(Request $request, $id)
     {
-        $datos = [];
+        try {
+            $vehiculo = Vehiculo::find($id);
+            if (!$vehiculo) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vehículo no encontrado'
+                ], 404);
+            }
 
-        if ($request->has('Placa')) {
-            $datos['Placa'] = $request->input('Placa');
-        }
-        if ($request->has('ID_Modelo')) {
-            $datos['ID_Modelo'] = $request->input('ID_Modelo');
-        }
-        if ($request->has('Anio')) {
-            $datos['Anio'] = $request->input('Anio');
-        }
-        if ($request->has('Color')) {
-            $datos['Color'] = $request->input('Color');
-        }
-        if ($request->has('ID_Estado')) {
-            $datos['ID_Estado'] = $request->input('ID_Estado');
-        }
+            if ($request->has('Placa')) {
+                $vehiculo->Placa = strtoupper($request->Placa);
+            }
+            if ($request->has('ID_Modelo')) {
+                $vehiculo->ID_Modelo = $request->ID_Modelo;
+            }
+            if ($request->has('Anio')) {
+                $vehiculo->Anio = $request->Anio;
+            }
+            if ($request->has('Color')) {
+                $vehiculo->Color = $request->Color;
+            }
+            if ($request->has('ID_Estado')) {
+                $vehiculo->ID_Estado = $request->ID_Estado;
+            }
 
-        DB::table('vehiculos')
-            ->where('ID_Vehiculo', $id)
-            ->update($datos);
+            $vehiculo->save();
 
-        return response()->json([
-            "message" => "Vehiculo actualizado"
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Vehículo actualizado exitosamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy($id)
     {
-        DB::table('vehiculos')
-        ->where('ID_Vehiculo',$id)
-        ->delete();
-
-        return response()->json([
-            "message" => "Vehiculo eliminado"
-        ]);
+        try {
+            \Log::info('Eliminando vehículo ID: ' . $id);
+            
+            $vehiculo = Vehiculo::find($id);
+            if (!$vehiculo) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vehículo no encontrado'
+                ], 404);
+            }
+            
+            $vehiculo->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Vehículo eliminado exitosamente'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error al eliminar vehículo: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }
