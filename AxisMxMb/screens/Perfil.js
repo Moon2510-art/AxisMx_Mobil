@@ -100,17 +100,7 @@ export default function PerfilScreen({ navigation }) {
 
       <View style={styles.settingsContainer}>
         <Text style={styles.menuTitle}>Configuración</Text>
-        <TouchableOpacity 
-          style={styles.menuItem} 
-          onPress={() => navigation.navigate('Notificaciones')} // <--- Añadir esta línea
-        >
-          <Icon name="notifications-outline" size={24} color="#114B5F" />
-          <View style={styles.menuItemContent}>
-            <Text style={styles.menuItemText}>Notificaciones</Text>
-            <Text style={styles.menuItemDescription}>Configurar alertas</Text>
-          </View>
-          <Icon name="chevron-forward-outline" size={20} color="#999" />
-        </TouchableOpacity>
+    
         <TouchableOpacity 
             style={styles.menuItem}
             onPress={() => navigation.navigate('CambiarPassword')} // <--- Añadir esto
